@@ -1,0 +1,364 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>App版本更新时对SQLite数据库升级或者降级遇到的问题 | 书呆子精神院</title>
+  <meta name="author" content="Yanyuetian">
+  
+  <meta name="description" content="SQLite是Android内置的一个很小的关系型数据库。SQLiteOpenHelper是一个用来辅助管理数据库创建和版本升级问题的抽象类。我们可以继承这个抽象类，实现它的一些方法来对数据库进行自定义操作。下面两个方法必须重写：
+
+public void onCreate(SQLiteDatabase db)
+public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
+
+另外SQLiteOpenHelper子类在构造实例时必须指定当前数据库的名称（name）、版本号（version）。而这里名称就决定了数据库存储时的文件名称，而这里的版本号与App在AndroidMainfest.xml定义的versionCode没有绝对关联。也就是在App更新时如果数据库的数据结构没有发生变化那么数据库的版本号则不用增加。
+onCreate：调用时机是用户首次安装应用后启动，或是清除App数据库文件后启动。这时可以在这个函数中完成初始的数据表的创建。
+onUpgrade：调用时机是用户在做应用更新，覆盖安装后启动，如果新版本中数据库版本号要比旧版本中的数据库版本号高则会调用。这时可以在这个函数完成数据库版本升级带来的旧版本的兼容问题，以及数据迁移问题。">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="App版本更新时对SQLite数据库升级或者降级遇到的问题"/>
+  <meta property="og:site_name" content="书呆子精神院"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+  
+  <link href="/favicon.ico" rel="icon" type="image/x-ico">
+  <link rel="canonical" href="http://www.pedant.cn/2014/08/01/sqliteopenhelper-onupgrade-ondowngrade-handle/" />
+  <link rel="alternate" href="/atom.xml" title="书呆子精神院" type="application/atom+xml">
+  
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-45991394-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="blog-header">
+  <h1><a href="/">书呆子精神院</a></h1>
+  <h2>一起发呆，一起发疯</h2>
+</div>
+<nav id="main-nav" class="blog-nav">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+      <li><a href="/about">关于</a></li>
+    
+    <li> <a href="/atom.xml">RSS</a> </li>
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    
+      <div id="main-col" class="alignleft"><div id="wrapper"><article class="android">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2014-08-01T02:57:29.000Z"><a href="/2014/08/01/sqliteopenhelper-onupgrade-ondowngrade-handle/">8月01 2014</a></time>
+      
+      
+  
+    <h1 class="title">App版本更新时对SQLite数据库升级或者降级遇到的问题</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>SQLite是Android内置的一个很小的关系型数据库。SQLiteOpenHelper是一个用来辅助管理数据库创建和版本升级问题的抽象类。我们可以继承这个抽象类，实现它的一些方法来对数据库进行自定义操作。下面两个方法必须重写：</p>
+<ul>
+<li>public void onCreate(SQLiteDatabase db)</li>
+<li>public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)</li>
+</ul>
+<p>另外SQLiteOpenHelper子类在构造实例时必须指定当前数据库的名称（name）、版本号（version）。而这里名称就决定了数据库存储时的文件名称，而这里的版本号与App在AndroidMainfest.xml定义的versionCode没有绝对关联。也就是在App更新时如果数据库的数据结构没有发生变化那么数据库的版本号则不用增加。</p>
+<p>onCreate：调用时机是用户首次安装应用后启动，或是清除App数据库文件后启动。这时可以在这个函数中完成初始的数据表的创建。</p>
+<p>onUpgrade：调用时机是用户在做应用更新，覆盖安装后启动，如果新版本中数据库版本号要比旧版本中的数据库版本号高则会调用。这时可以在这个函数完成数据库版本升级带来的旧版本的兼容问题，以及数据迁移问题。</p>
+<a id="more"></a>
+
+<p>还有一个一般情况下不需要重写，但在应用出现逆向降级（如应用由版本号4降级安装版本号为3的包）时必须重写的方法<strong>onDowngrade</strong>，如果应用降级覆盖安装时没有重写该方法则会崩溃。</p>
+<p>在数据库版本升级时， 我们可能会遇到这样一些情况：</p>
+<ul>
+<li>需要扩展一个表的字段</li>
+<li>删除掉原来表上某个冗余的字段</li>
+<li>新建一个表</li>
+</ul>
+<p>而处理上面这些问题都要在不损害旧数据库历史数据的前提下完成。这里我们假设用户手机上之前安装的是数据库版本为1的包，升级安装的是数据库版本号为2的包。这时我们要在数据库版本为2的包在去处理这些升级逻辑。</p>
+<p>首先是扩展一个表的字段在onUpgrade中的实现为：</p>
+<figure class="highlight JAVA"><figcaption><span>MyDBHelper.java</span></figcaption><table><tr><td class="gutter"><pre>1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="code"><pre><span class="annotation">@Override</span>
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onUpgrade</span>(SQLiteDatabase db, <span class="keyword">int</span> oldVersion, <span class="keyword">int</span> newVersion) {
+    <span class="comment">//旧数据库版本为1，才为表pedant添加一个student_name字段</span>
+    <span class="keyword">if</span>(oldVersion &lt; <span class="number">2</span>) {
+        db.execSQL(<span class="string">"ALTER TABLE pedant ADD COLUMN student_name text"</span>);
+    }
+}
+</pre></td></tr></table></figure>
+
+<p>SQLite对ALTER TABLE的支持是有限的，你可以在一个存在表上添加一个字段到末尾，或者是改变表的名称。但如果你想做更复杂的操作，比如删除一个表已有的字段，就要重新创建这个表并完成数据迁移。详见<a href="http://www.sqlite.org/faq.html#q11" target="_blank" rel="external">SQLite Frequently Questions</a></p>
+<p>比如表pedant原来有三个字段a、b、c，现在想删除c字段，那么在onUpgrade中写法如下：</p>
+<figure class="highlight JAVA"><figcaption><span>MyDBHelper.java</span></figcaption><table><tr><td class="gutter"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+</pre></td><td class="code"><pre><span class="annotation">@Override</span>
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onUpgrade</span>(SQLiteDatabase db, <span class="keyword">int</span> oldVersion, <span class="keyword">int</span> newVersion) {
+    <span class="comment">//旧数据库版本为1，删除表pedant的c字段</span>
+    <span class="keyword">if</span>(oldVersion &lt; <span class="number">2</span>) {
+        db.beginTransaction();
+        <span class="keyword">try</span> {
+            db.execSQL(<span class="string">"CREATE TEMPORARY TABLE pe_backup (a, b);"</span>);
+            db.execSQL(<span class="string">"INSERT INTO pe_backup SELECT a, b FROM pedant;"</span>);
+            db.execSQL(<span class="string">"DROP TABLE pedant;"</span>);
+            db.execSQL(<span class="string">"CREATE TABLE pedant(a text, b text);"</span>);
+            db.execSQL(<span class="string">"INSERT INTO pedant SELECT a, b FROM pe_backup;"</span>);
+            db.execSQL(<span class="string">"DROP TABLE pe_backup;"</span>);
+            db.setTransactionSuccessful();
+        } <span class="keyword">finally</span> {
+            db.endTransaction();
+        }
+    }
+}
+</pre></td></tr></table></figure>
+
+<p>这样就既完成了对c字段的删除也保留了原来表上的数据。</p>
+<p>最后一种情况最简单直接执行CREATE语句就要可以了。</p>
+<figure class="highlight JAVA"><figcaption><span>MyDBHelper.java</span></figcaption><table><tr><td class="gutter"><pre>1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="code"><pre><span class="annotation">@Override</span>
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onUpgrade</span>(SQLiteDatabase db, <span class="keyword">int</span> oldVersion, <span class="keyword">int</span> newVersion) {
+    <span class="comment">//旧数据库版本为1，创建新表newtb</span>
+    <span class="keyword">if</span>(oldVersion &lt; <span class="number">2</span>) {
+        db.execSQL(<span class="string">"CREATE TABLE newtb(a text, b text);"</span>);
+    }
+}
+</pre></td></tr></table></figure>
+
+<p>数据库在做升级时我们能明确地知道当前我们要对各旧表进行什么样的操作来兼容新版本。但如果在数据库降级时，情况就不一样了，针对我们开发新版本2时， 我们不能明确地知道以后的新版本比如版本3、4的数据库结构走向是怎样的。比如以后用户从版本3回退到我们正在开发的版本2，由于我们开发当时不能预知版本3的表结构，不知版本3的数据表能否兼容到版本2（假如版本3升级时删除了一个版本2一直在用的表字段，这时回退数据结构可能就不兼容了），那么我们在开发版本2时最稳妥的做法是<strong>重写onDowngrade时把所有当前版本将用到的表全部重建，即降级时以前的数据全部扔掉</strong>。</p>
+<figure class="highlight JAVA"><figcaption><span>MyDBHelper.java</span></figcaption><table><tr><td class="gutter"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td><td class="code"><pre><span class="comment">// 因为我们无法预知未来版本的表结构，向下兼容时最稳妥的方法就是将该版本自己需要的表重构一次</span>
+<span class="annotation">@Override</span>
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onDowngrade</span> (SQLiteDatabase db, <span class="keyword">int</span> oldVersion, <span class="keyword">int</span> newVersion) {
+    db.execSQL(<span class="string">"DROP TABLE IF EXISTS t1;"</span>);
+    db.execSQL(<span class="string">"DROP TABLE IF EXISTS t2;"</span>);
+    db.execSQL(<span class="string">"DROP TABLE IF EXISTS t3;"</span>);
+    db.execSQL(<span class="string">"DROP TABLE IF EXISTS t4;"</span>);
+    ....
+    onCreate(db); <span class="comment">// 建表</span>
+}
+</pre></td></tr></table></figure>
+
+<p><strong>转载请注明出处链接，谢谢！！！</strong></p>
+
+      
+    </div>
+  
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/android/">android</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  
+  </div>
+</article>
+
+
+<section id="comment">
+<!-- Duoshuo Comment BEGIN -->
+	<div class="ds-thread"></div>
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"pedant"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = 'http://static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		|| document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+</script>
+<!-- Duoshuo Comment END -->
+</section>
+
+</div></div>
+      <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:www.pedant.cn">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/android/">android</a><small>2</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/SQLite/">SQLite</a><small>1</small></li>
+  
+    <li><a href="/tags/java/">java</a><small>2</small></li>
+  
+    <li><a href="/tags/javascript/">javascript</a><small>1</small></li>
+  
+    <li><a href="/tags/webview/">webview</a><small>1</small></li>
+  
+    <li><a href="/tags/攻防安全/">攻防安全</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  <div class="widget tag">
+<h3 class="title">友情链接</h3>
+<ul class="entry">
+    <li><a href="http://blog.csdn.net/Luoshengyang/" title="老罗的Android之旅">老罗的Android之旅</a></li>
+    <li><a href="http://winterland.me/" title="冬的实验室">冬的实验室</a></li>
+    <li><a href="http://blog.codingnow.com/" title="云风的BLOG">云风的BLOG</a></li>
+</ul>
+</div>
+
+</aside>
+    
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="aligncenter">
+  
+  &copy; 2014 Yanyuetian
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="http://cdn.staticfile.org/jquery/2.1.1-rc2/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+
+
+
+
+
+<div id="scroll2top">
+<img src="/scroll2top/arrow.png"/>
+</div>
+<script src="/scroll2top/scroll2top.js"></script>
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script src="https://www.zybuluo.com/static/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</script>
+  <!-- Baidu Button BEGIN -->
+    <script type="text/javascript" id="bdshare_js" data="type=slide&amp;img=1&amp;mini=1&amp;pos=left&amp;uid=6871901" ></script>
+    <script type="text/javascript" id="bdshell_js"></script>
+    <script type="text/javascript" src="/js/bds_animate.js"></script>
+    <script type="text/javascript">
+    var bds_config={"bdTop":0};
+    document.getElementById("bdshell_js").src = "http://bdimg.share.baidu.com/static/js/shell_v2.js?cdnversion=" + Math.ceil(new Date()/3600000);
+    </script>
+ <!-- Baidu Button END -->
+
+</body>
+</html>
