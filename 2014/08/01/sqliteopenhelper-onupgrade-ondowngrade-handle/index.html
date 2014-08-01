@@ -131,7 +131,7 @@ onUpgrade：调用时机是用户在做应用更新，覆盖安装后启动，�
 }
 </pre></td></tr></table></figure>
 
-<p>SQLite对ALTER TABLE的支持是有限的，你可以在一个存在表上添加一个字段到末尾，或者是改变表的名称。但如果你想做更复杂的操作，比如删除一个表已有的字段，就要重新创建这个表并完成数据迁移，而不能使用DROP COLUMN这样方便的命令了。详见<a href="http://www.sqlite.org/faq.html#q11" target="_blank" rel="external">SQLite Frequently Questions</a></p>
+<p>SQLite对ALTER TABLE的支持是有限的，你可以在一个存在表上添加一个字段到末尾，或者是改变表的名称。但如果你想做更复杂的操作，比如删除一个表已有的字段，就要重新创建这个表并完成数据迁移，而不能使用<strong>DROP COLUMN</strong>这样方便的命令了。详见<a href="http://www.sqlite.org/faq.html#q11" target="_blank" rel="external">SQLite Frequently Questions</a></p>
 <p>比如表pedant原来有三个字段a、b、c，现在想删除c字段，那么在onUpgrade中写法如下：</p>
 <figure class="highlight JAVA"><figcaption><span>MyDBHelper.java</span></figcaption><table><tr><td class="gutter"><pre>1
 2
@@ -189,7 +189,7 @@ onUpgrade：调用时机是用户在做应用更新，覆盖安装后启动，�
 }
 </pre></td></tr></table></figure>
 
-<p>数据库在做升级时我们能明确地知道当前我们要对各旧表进行什么样的操作来兼容新版本。但如果在数据库降级时，情况就不一样了，针对我们开发新版本2时， 我们不能明确地知道以后的新版本比如版本3、4的数据库结构走向是怎样的。比如以后用户从版本3回退到我们正在开发的版本2，由于我们开发当时不能预知版本3的表结构，不知版本3的数据表能否兼容到版本2（假如版本3升级时删除了一个版本2一直在用的表字段，这时回退数据结构可能就不兼容了），那么我们在开发版本2时最稳妥的做法是<strong>重写onDowngrade时把所有当前版本将用到的表全部重建，即降级时以前的数据全部扔掉</strong>。</p>
+<p>数据库在做升级时我们能明确地知道当前我们要对各旧表进行什么样的操作来兼容新版本。但如果在数据库降级时，情况就不一样了，针对我们开发新版本2时， 我们不能明确地知道以后的新版本比如版本3、4的数据库结构走向是怎样的。比如以后用户从版本3回退到我们正在开发的版本2，由于我们开发当时不能预知版本3的表结构，不知版本3的数据表能否兼容到版本2（假如版本3升级时删除了一个版本2一直在用的表字段，这时回退数据结构可能就不兼容了），那么我们在开发版本2时最稳妥的做法是<strong>重写onDowngrade时把所有当前版本将用到的表全部重建，即降级时扔掉以前全部的数据</strong>。</p>
 <figure class="highlight JAVA"><figcaption><span>MyDBHelper.java</span></figcaption><table><tr><td class="gutter"><pre>1
 2
 3
