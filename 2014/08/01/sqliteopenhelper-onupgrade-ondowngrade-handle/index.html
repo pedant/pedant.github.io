@@ -131,7 +131,7 @@ onUpgrade：调用时机是用户在做应用更新，覆盖安装后启动，�
 }
 </pre></td></tr></table></figure>
 
-<p>SQLite对ALTER TABLE的支持是有限的，你可以在一个存在表上添加一个字段到末尾，或者是改变表的名称。但如果你想做更复杂的操作，比如删除一个表已有的字段，就要重新创建这个表并完成数据迁移。详见<a href="http://www.sqlite.org/faq.html#q11" target="_blank" rel="external">SQLite Frequently Questions</a></p>
+<p>SQLite对ALTER TABLE的支持是有限的，你可以在一个存在表上添加一个字段到末尾，或者是改变表的名称。但如果你想做更复杂的操作，比如删除一个表已有的字段，就要重新创建这个表并完成数据迁移，而不能使用DROP COLUMN这样方便的命令了。详见<a href="http://www.sqlite.org/faq.html#q11" target="_blank" rel="external">SQLite Frequently Questions</a></p>
 <p>比如表pedant原来有三个字段a、b、c，现在想删除c字段，那么在onUpgrade中写法如下：</p>
 <figure class="highlight JAVA"><figcaption><span>MyDBHelper.java</span></figcaption><table><tr><td class="gutter"><pre>1
 2
