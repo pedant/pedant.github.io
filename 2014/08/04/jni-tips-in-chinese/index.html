@@ -103,7 +103,7 @@
 <p>JNI定义了两种关键数据结构，“JavaVM”和“JNIEnv”。它们本质上都是指向函数表指针的指针（在C++版本中，它们被定义为类，该类包含一个指向函数表的指针，以及一系列可以通过这个函数表间接地访问对应的JNI函数的成员函数）。JavaVM提供“调用接口（invocation interface）”函数, 允许你创建和销毁一个JavaVM。理论上你可以在一个进程中拥有多个JavaVM对象，但安卓只允许一个。</p>
 <p>JNIEnv提供了大部分JNI功能。你定义的所有本地函数都会接收JNIEnv作为第一个参数。</p>
 <p>JNIEnv是用作线程局部存储。因此，<strong>你不能在线程间共享一个JNIEnv变量</strong>。如果在一段代码中没有其它办法获得它的JNIEnv，你可以共享JavaVM对象，使用GetEnv来取得该线程下的JNIEnv（如果该线程有一个JavaVM的话；见下面的AttachCurrentThread）。</p>
-<p>JNIEnv和JavaVM的在C声明是不同于在C++的声明。头文件“jni.h”根据它是以C还是以C++模式包含来提供不同的类型定义（typedefs）。因此，不建议把JNIEnv参数放到可能被两种语言引入的头文件中（换一句话说：如果你的头文件需要#ifdef __cplusplus，你可能不得不在任何涉及到JNIEnv的内容时也要做些额外的工作）。</p>
+<p>JNIEnv和JavaVM的在C声明是不同于在C++的声明。头文件“jni.h”根据它是以C还是以C++模式包含来提供不同的类型定义（typedefs）。因此，不建议把JNIEnv参数放到可能被两种语言引入的头文件中（换一句话说：如果你的头文件需要#ifdef __cplusplus，你可能不得不在任何涉及到JNIEnv的内容处都要做些额外的工作）。</p>
 <h1 id="线程">线程</h1>
 <p>所有的线程都是Linux线程，由内核统一调度。它们通常从托管代码中启动（使用Thread.start），但它们也能够在其他任何地方创建，然后连接（attach）到JavaVM。例如，一个用pthread_create启动的线程能够使用JNI AttachCurrentThread 或 AttachCurrentThreadAsDaemon函数连接到JavaVM。在一个线程成功连接（attach）之前，它没有JNIEnv，<strong>不能够调用JNI函数</strong>。</p>
 <p>连接一个本地环境创建的线程会触发构造一个java.lang.Thread对象，然后其被添加到主线程群组（main ThreadGroup）,以让调试器可以探测到。对一个已经连接的线程使用AttachCurrentThread不做任何操作（no-op）。</p>
