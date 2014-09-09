@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   
-  <title>如何在WebView中让JS与Java安全地相互调用 | 书呆子精神院</title>
+  <title>在WebView中如何让JS与Java安全地互相调用 | 书呆子精神院</title>
   <meta name="author" content="Yanyuetian">
   
   <meta name="description" content="在现在安卓应用原生开发中，为了追求开发的效率以及移植的便利性，使用WebView作为业务内容展示与交互的主要载体是个不错的折中方案。那么在这种Hybrid(混合式) App中，难免就会遇到页面JS需要与Java相互调用，调用Java方法去做那部分网页JS不能完成的功能。">
@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="如何在WebView中让JS与Java安全地相互调用"/>
+  <meta property="og:title" content="在WebView中如何让JS与Java安全地互相调用"/>
   <meta property="og:site_name" content="书呆子精神院"/>
 
   
@@ -70,7 +70,7 @@
       
       
   
-    <h1 class="title">如何在WebView中让JS与Java安全地相互调用</h1>
+    <h1 class="title">在WebView中如何让JS与Java安全地互相调用</h1>
   
 
     </header>
@@ -83,7 +83,7 @@
 <p>安卓4.2及以上版本（API &gt;= 17），在注入类中为可调用的方法添加@JavascriptInterface注解，无注解的方法不能被调用，这种方式可以防范注入漏洞。那么有没一种安全的方式，可以完全兼顾安卓4.2以下版本呢？答案就是使用prompt，即WebChromeClient 输入框弹出模式。</p>
 <p>我们参照 <a href="http://blog.csdn.net/leehong2005/article/details/11808557" target="_blank" rel="external">Android WebView的Js对象注入漏洞解决方案</a> 这篇文章给出的解决方案， 但它JS下的方法有点笨拙， 动态生成JS文件过程也并没有清晰，且加载JS文件的时机也没有准确把握。那么如何改造才能便利地在JS代码中调用Java方法，并且安全可靠呢？</p>
 <h3 id="一、动态地生成将注入的JS代码">一、动态地生成将注入的JS代码</h3>
-<p>这个时候，我们将要注入的类HostJsScope（当然也可以是你定义的其它类）的public且static方法拿出来，逐个生成方法的签名，依据方法签名先将方法缓存起来，同时结合方法名称与静态的HostApp-JS代码动态生成一段将要注入到webview中的字符串。</p>
+<p>JsCallJava在构造时，将要注入类的public且static方法拿出来，逐个生成方法的签名，依据方法签名先将方法缓存起来，同时结合方法名称与静态的HostApp-JS代码动态生成一段将要注入到webview中的字符串。</p>
 <figure class="highlight JAVA"><figcaption><span>JsCallJava.java</span></figcaption><table><tr><td class="gutter"><pre>1
 2
 3
@@ -136,11 +136,11 @@
 50
 51
 52
-</pre></td><td class="code"><pre><span class="keyword">public</span> <span class="title">JsCallJava</span> () {
+</pre></td><td class="code"><pre><span class="keyword">public</span> <span class="title">JsCallJava</span> (Class injectedCls) {
     <span class="keyword">try</span> {
         mMethodsMap = <span class="keyword">new</span> HashMap&lt;String, Method&gt;();
         <span class="comment">//获取自身声明的所有方法（包括public private protected）， getMethods会获得所有继承与非继承的方法</span>
-        Method[] methods = HostJsScope.class.getDeclaredMethods();
+        Method[] methods = injectedCls.getDeclaredMethods();
         StringBuilder sb = <span class="keyword">new</span> StringBuilder(<span class="string">"javascript:(function(b){console.log(\"HostApp initialization begin\");var a={queue:[],callback:function(){var d=Array.prototype.slice.call(arguments,0);var c=d.shift();var e=d.shift();this.queue[c].apply(this,d);if(!e){delete this.queue[c]}}};"</span>);
 
         <span class="keyword">for</span> (Method method : methods) {
@@ -155,7 +155,7 @@
         sb.append(<span class="string">"function(){var f=Array.prototype.slice.call(arguments,0);if(f.length&lt;1){throw\"HostApp call error, message:miss method name\"}var e=[];for(var h=1;h&lt;f.length;h++){var c=f[h];var j=typeof c;e[e.length]=j;if(j==\"function\"){var d=a.queue.length;a.queue[d]=c;f[h]=d}}var g=JSON.parse(prompt(JSON.stringify({method:f.shift(),types:e,args:f})));if(g.code!=200){throw\"HostApp call error, code:\"+g.code+\", message:\"+g.result}return g.result};Object.getOwnPropertyNames(a).forEach(function(d){var c=a[d];if(typeof c===\"function\"&&d!==\"callback\"){a[d]=function(){return c.apply(a,[d].concat(Array.prototype.slice.call(arguments,0)))}}});b.HostApp=a;console.log(\"HostApp initialization end\")})(window);"</span>);
         mPreloadInterfaceJS = sb.toString();
     } <span class="keyword">catch</span>(Exception e){
-        Log.e(<span class="string">"init js error:"</span> + e.getMessage());
+        Log.e(TAG, <span class="string">"init js error:"</span> + e.getMessage());
     }
 }
 
@@ -164,7 +164,7 @@
     Class[] argsTypes = method.getParameterTypes();
     <span class="keyword">int</span> len = argsTypes.length;
     <span class="keyword">if</span> (len &lt; <span class="number">1</span> || argsTypes[<span class="number">0</span>] != WebView.class) {
-        Log.w(<span class="string">"method("</span> + sign + <span class="string">") must use webview to be first parameter, will be pass"</span>);
+        Log.w(TAG, <span class="string">"method("</span> + sign + <span class="string">") must use webview to be first parameter, will be pass"</span>);
         <span class="keyword">return</span> <span class="keyword">null</span>;
     }
     <span class="keyword">for</span> (<span class="keyword">int</span> k = <span class="number">1</span>; k &lt; len; k++) {
@@ -323,8 +323,14 @@
 
 <p>其实在JsCallJava初始化时我们拼接的只是上面第15行 <em>hostApp.toast = hostApp.alert = hostApp.getIMSI = function ()</em> 这段。目的是将所有JS层调用函数嫁接到一个匿名函数1中，而后利用拦截技术，遍历hostApp下所有的函数，拿出对应的函数名，然后将hostApp下所有的函数调用嫁接到另一个匿名函数2，这样做的目的是hostApp下函数调用时首先执行匿名函数2，匿名函数2将对应的函数名作为第一个参数然后再调用匿名函数1，这样匿名函数1中就能区分执行时调用来源。实现了JS层<strong>调用入口统一，返回出口统一</strong>的结构体系。</p>
 <h3 id="二、HostApp_JS片段注入时机">二、HostApp JS片段注入时机</h3>
-<p>步骤一说明了HostApp-JS片段的拼接方法，同时JS片段拼接是在JsCallJava初始化完成的，而JsCallJava初始化是在Application启动时发起的。</p>
-<figure class="highlight JAVA"><figcaption><span>MainApp.java</span></figcaption><table><tr><td class="gutter"><pre>1
+<p>步骤一说明了HostApp-JS片段的拼接方法，同时JS片段拼接是在JsCallJava初始化完成的，而JsCallJava初始化是在实例化InjectedChromeClient对象时发起的。</p>
+<figure class="highlight JAVA"><figcaption><span>InjectedChromeClient.java</span></figcaption><table><tr><td class="gutter"><pre>1
+2
+3
+</pre></td><td class="code"><pre><span class="keyword">public</span> <span class="title">InjectedChromeClient</span> (Class injectedCls) {
+    mJsCallJava = <span class="keyword">new</span> JsCallJava(injectedCls);
+}
+</pre></td></tr></table></figure><br>从步骤一的代码，我们知道JsCallJava拼接出来的JS代码暂时被存到mPreloadInterfaceJS字段中。那么我们何时把这段代码串注入到Webview的页面空间内呢？答案是页面加载进度变化的过程中。<br><figure class="highlight JAVA"><figcaption><span>InjectedChromeClient.java</span></figcaption><table><tr><td class="gutter"><pre>1
 2
 3
 4
@@ -341,74 +347,20 @@
 15
 16
 17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-</pre></td><td class="code"><pre><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainApp</span> <span class="keyword">extends</span> <span class="title">Application</span> {</span>
-    <span class="keyword">public</span> <span class="keyword">static</span> MainApp <span class="title">getIns</span>() {
-        <span class="keyword">return</span> gMainApp;
-    }
-
-    <span class="keyword">private</span> <span class="keyword">final</span> Object mLock = <span class="keyword">new</span> Object();
-    <span class="keyword">private</span> <span class="keyword">static</span> MainApp gMainApp;
-    <span class="keyword">private</span> JsCallJava mJsCallJava;
-
-    <span class="annotation">@Override</span>
-    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onCreate</span>() {
-        <span class="keyword">super</span>.onCreate();
-        TaskExecutor.executeTask(<span class="keyword">new</span> Runnable() {
-            <span class="annotation">@Override</span>
-            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() {
-                <span class="keyword">synchronized</span> (mLock) {
-                    mJsCallJava = <span class="keyword">new</span> JsCallJava();
-                }
-            }
-        });
-        gMainApp = <span class="keyword">this</span>;
-    }
-
-    <span class="keyword">public</span> JsCallJava <span class="title">getJsCallJava</span> () {
-        <span class="keyword">synchronized</span> (mLock) {
-            <span class="keyword">return</span> mJsCallJava;
-        }
-    }
-}
-</pre></td></tr></table></figure><br>从上面的代码，我们知道JsCallJava拼接出来的JS代码暂时被存到mPreloadInterfaceJS字段中。那么我们何时把这段代码串注入到Webview的页面空间内呢？答案是页面加载进度变化的过程中。<br><figure class="highlight JAVA"><figcaption><span>BaseWebChromeClient.java</span></figcaption><table><tr><td class="gutter"><pre>1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
 </pre></td><td class="code"><pre><span class="annotation">@Override</span>
 <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onProgressChanged</span> (WebView view, <span class="keyword">int</span> newProgress) {
-    BaseWebView baseWebView = (BaseWebView)view;
     <span class="comment">//为什么要在这里注入JS</span>
     <span class="comment">//1 OnPageStarted中注入有可能全局注入不成功，导致页面脚本上所有接口任何时候都不可用</span>
     <span class="comment">//2 OnPageFinished中注入，虽然最后都会全局注入成功，但是完成时间有可能太晚，当页面在初始化调用接口函数时会等待时间过长</span>
     <span class="comment">//3 在进度变化时注入，刚好可以在上面两个问题中得到一个折中处理</span>
     <span class="comment">//为什么是进度大于25%才进行注入，因为从测试看来只有进度大于这个数字页面才真正得到框架刷新加载，保证100%注入成功</span>
-    <span class="keyword">if</span> (newProgress &gt; <span class="number">25</span> && !baseWebView.isInjectedJS()) {
-        baseWebView.loadJS(MainApp.getIns().getJsCallJava().getPreloadInterfaceJS());
-        baseWebView.setIsInjectedJS(<span class="keyword">true</span>);
-        Log.d(<span class="string">" inject js interface completely on progress "</span> + newProgress);
+    <span class="keyword">if</span> (newProgress &lt;= <span class="number">25</span>) {
+        mIsInjectedJS = <span class="keyword">false</span>;
+    } <span class="keyword">else</span> <span class="keyword">if</span> (!mIsInjectedJS) {
+        view.loadUrl(mJsCallJava.getPreloadInterfaceJS());
+        mIsInjectedJS = <span class="keyword">true</span>;
+        Log.d(TAG, <span class="string">" inject js interface completely on progress "</span> + newProgress);
+
     }
     <span class="keyword">super</span>.onProgressChanged(view, newProgress);
 }
@@ -417,14 +369,14 @@
 <p>从上面我们可以看出，注入的时机是准确把握在进度大于25%时。如果在OnPageFinished注入，页面document.ready的初始回调会等待时间过长，详细的原因我们会在后面讲到。</p>
 <h3 id="三、页面调用Java方法执行的过程">三、页面调用Java方法执行的过程</h3>
 <p>OK，上面两步解决了动态生成与成功注入的两大问题，接下来就要处理JS具体的调用过程。上面，我们知道页面调用Java方法时，匿名js函数在拼接好参数后prompt json数据。prompt消息被Java层的WebChromeClient.onJsPrompt拦截到。</p>
-<figure class="highlight JAVA"><figcaption><span>BaseWebChromeClient.java</span></figcaption><table><tr><td class="gutter"><pre>1
+<figure class="highlight JAVA"><figcaption><span>InjectedChromeClient.java</span></figcaption><table><tr><td class="gutter"><pre>1
 2
 3
 4
 5
 </pre></td><td class="code"><pre><span class="annotation">@Override</span>
 <span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onJsPrompt</span>(WebView view, String url, String message, String defaultValue, JsPromptResult result) {
-    result.confirm(MainApp.getIns().getJsCallJava().call(view, message));
+    result.confirm(mJsCallJava.call(view, message));
     <span class="keyword">return</span> <span class="keyword">true</span>;
 }
 </pre></td></tr></table></figure>
@@ -506,80 +458,80 @@
 74
 75
 </pre></td><td class="code"><pre><span class="keyword">public</span> String <span class="title">call</span>(WebView webView, String jsonStr) {
-       <span class="keyword">if</span> (!TextUtils.isEmpty(jsonStr)) {
-           <span class="keyword">try</span> {
-               JSONObject callJson = <span class="keyword">new</span> JSONObject(jsonStr);
-               String methodName = callJson.getString(<span class="string">"method"</span>);
-               JSONArray argsTypes = callJson.getJSONArray(<span class="string">"types"</span>);
-               JSONArray argsVals = callJson.getJSONArray(<span class="string">"args"</span>);
-               String sign = methodName;
-               <span class="keyword">int</span> len = argsTypes.length();
-               Object[] values = <span class="keyword">new</span> Object[len + <span class="number">1</span>];
-               <span class="keyword">int</span> numIndex = <span class="number">0</span>;
-               String currType;
+    <span class="keyword">if</span> (!TextUtils.isEmpty(jsonStr)) {
+        <span class="keyword">try</span> {
+            JSONObject callJson = <span class="keyword">new</span> JSONObject(jsonStr);
+            String methodName = callJson.getString(<span class="string">"method"</span>);
+            JSONArray argsTypes = callJson.getJSONArray(<span class="string">"types"</span>);
+            JSONArray argsVals = callJson.getJSONArray(<span class="string">"args"</span>);
+            String sign = methodName;
+            <span class="keyword">int</span> len = argsTypes.length();
+            Object[] values = <span class="keyword">new</span> Object[len + <span class="number">1</span>];
+            <span class="keyword">int</span> numIndex = <span class="number">0</span>;
+            String currType;
 
-               values[<span class="number">0</span>] = webView;
+            values[<span class="number">0</span>] = webView;
 
-               <span class="keyword">for</span> (<span class="keyword">int</span> k = <span class="number">0</span>; k &lt; len; k++) {
-                   currType = argsTypes.optString(k);
-                   <span class="keyword">if</span> (<span class="string">"string"</span>.equals(currType)) {
-                       sign += <span class="string">"_S"</span>;
-                       values[k + <span class="number">1</span>] = argsVals.isNull(k) ? <span class="keyword">null</span> : argsVals.getString(k);
-                   } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="string">"number"</span>.equals(currType)) {
-                       sign += <span class="string">"_N"</span>;
-                       numIndex = numIndex * <span class="number">10</span> + k + <span class="number">1</span>;
-                   } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="string">"boolean"</span>.equals(currType)) {
-                       sign += <span class="string">"_B"</span>;
-                       values[k + <span class="number">1</span>] = argsVals.getBoolean(k);
-                   } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="string">"object"</span>.equals(currType)) {
-                       sign += <span class="string">"_O"</span>;
-                       values[k + <span class="number">1</span>] = argsVals.isNull(k) ? <span class="keyword">null</span> : argsVals.getJSONObject(k);
-                   } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="string">"function"</span>.equals(currType)) {
-                       sign += <span class="string">"_F"</span>;
-                       values[k + <span class="number">1</span>] = <span class="keyword">new</span> JsCallback(webView, argsVals.getInt(k));
-                   } <span class="keyword">else</span> {
-                       sign += <span class="string">"_P"</span>;
-                   }
-               }
+            <span class="keyword">for</span> (<span class="keyword">int</span> k = <span class="number">0</span>; k &lt; len; k++) {
+                currType = argsTypes.optString(k);
+                <span class="keyword">if</span> (<span class="string">"string"</span>.equals(currType)) {
+                    sign += <span class="string">"_S"</span>;
+                    values[k + <span class="number">1</span>] = argsVals.isNull(k) ? <span class="keyword">null</span> : argsVals.getString(k);
+                } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="string">"number"</span>.equals(currType)) {
+                    sign += <span class="string">"_N"</span>;
+                    numIndex = numIndex * <span class="number">10</span> + k + <span class="number">1</span>;
+                } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="string">"boolean"</span>.equals(currType)) {
+                    sign += <span class="string">"_B"</span>;
+                    values[k + <span class="number">1</span>] = argsVals.getBoolean(k);
+                } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="string">"object"</span>.equals(currType)) {
+                    sign += <span class="string">"_O"</span>;
+                    values[k + <span class="number">1</span>] = argsVals.isNull(k) ? <span class="keyword">null</span> : argsVals.getJSONObject(k);
+                } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="string">"function"</span>.equals(currType)) {
+                    sign += <span class="string">"_F"</span>;
+                    values[k + <span class="number">1</span>] = <span class="keyword">new</span> JsCallback(webView, argsVals.getInt(k));
+                } <span class="keyword">else</span> {
+                    sign += <span class="string">"_P"</span>;
+                }
+            }
 
-               Method currMethod = mMethodsMap.get(sign);
+            Method currMethod = mMethodsMap.get(sign);
 
-               <span class="comment">// 方法匹配失败</span>
-               <span class="keyword">if</span> (currMethod == <span class="keyword">null</span>) {
-                   <span class="keyword">return</span> getReturn(jsonStr, <span class="number">500</span>, <span class="string">"not found method("</span> + methodName + <span class="string">") with valid parameters"</span>);
-               }
-               <span class="comment">// 数字类型细分匹配</span>
-               <span class="keyword">if</span> (numIndex &gt; <span class="number">0</span>) {
-                   Class[] methodTypes = currMethod.getParameterTypes();
-                   <span class="keyword">int</span> currIndex;
-                   Class currCls;
-                   <span class="keyword">while</span> (numIndex &gt; <span class="number">0</span>) {
-                       currIndex = numIndex - numIndex / <span class="number">10</span> * <span class="number">10</span>;
-                       currCls = methodTypes[currIndex];
-                       <span class="keyword">if</span> (currCls == <span class="keyword">int</span>.class) {
-                           values[currIndex] = argsVals.getInt(currIndex - <span class="number">1</span>);
-                       } <span class="keyword">else</span> <span class="keyword">if</span> (currCls == <span class="keyword">long</span>.class) {
-                           <span class="comment">//WARN: argsJson.getLong(k + defValue) will return a bigger incorrect number</span>
-                           values[currIndex] = Long.parseLong(argsVals.getString(currIndex - <span class="number">1</span>));
-                       } <span class="keyword">else</span> {
-                           values[currIndex] = argsVals.getDouble(currIndex - <span class="number">1</span>);
-                       }
-                       numIndex /= <span class="number">10</span>;
-                   }
-               }
+            <span class="comment">// 方法匹配失败</span>
+            <span class="keyword">if</span> (currMethod == <span class="keyword">null</span>) {
+                <span class="keyword">return</span> getReturn(jsonStr, <span class="number">500</span>, <span class="string">"not found method("</span> + methodName + <span class="string">") with valid parameters"</span>);
+            }
+            <span class="comment">// 数字类型细分匹配</span>
+            <span class="keyword">if</span> (numIndex &gt; <span class="number">0</span>) {
+                Class[] methodTypes = currMethod.getParameterTypes();
+                <span class="keyword">int</span> currIndex;
+                Class currCls;
+                <span class="keyword">while</span> (numIndex &gt; <span class="number">0</span>) {
+                    currIndex = numIndex - numIndex / <span class="number">10</span> * <span class="number">10</span>;
+                    currCls = methodTypes[currIndex];
+                    <span class="keyword">if</span> (currCls == <span class="keyword">int</span>.class) {
+                        values[currIndex] = argsVals.getInt(currIndex - <span class="number">1</span>);
+                    } <span class="keyword">else</span> <span class="keyword">if</span> (currCls == <span class="keyword">long</span>.class) {
+                        <span class="comment">//WARN: argsJson.getLong(k + defValue) will return a bigger incorrect number</span>
+                        values[currIndex] = Long.parseLong(argsVals.getString(currIndex - <span class="number">1</span>));
+                    } <span class="keyword">else</span> {
+                        values[currIndex] = argsVals.getDouble(currIndex - <span class="number">1</span>);
+                    }
+                    numIndex /= <span class="number">10</span>;
+                }
+            }
 
-               <span class="keyword">return</span> getReturn(jsonStr, <span class="number">200</span>, currMethod.invoke(<span class="keyword">null</span>, values));
-           } <span class="keyword">catch</span> (Exception e) {
-               <span class="comment">//优先返回详细的错误信息</span>
-               <span class="keyword">if</span> (e.getCause() != <span class="keyword">null</span>) {
-                   <span class="keyword">return</span> getReturn(jsonStr, <span class="number">500</span>, <span class="string">"method execute error:"</span> + e.getCause().getMessage());
-               }
-               <span class="keyword">return</span> getReturn(jsonStr, <span class="number">500</span>, <span class="string">"method execute error:"</span> + e.getMessage());
-           }
-       } <span class="keyword">else</span> {
-           <span class="keyword">return</span> getReturn(jsonStr, <span class="number">500</span>, <span class="string">"call data empty"</span>);
-       }
-   }
+            <span class="keyword">return</span> getReturn(jsonStr, <span class="number">200</span>, currMethod.invoke(<span class="keyword">null</span>, values));
+        } <span class="keyword">catch</span> (Exception e) {
+            <span class="comment">//优先返回详细的错误信息</span>
+            <span class="keyword">if</span> (e.getCause() != <span class="keyword">null</span>) {
+                <span class="keyword">return</span> getReturn(jsonStr, <span class="number">500</span>, <span class="string">"method execute error:"</span> + e.getCause().getMessage());
+            }
+            <span class="keyword">return</span> getReturn(jsonStr, <span class="number">500</span>, <span class="string">"method execute error:"</span> + e.getMessage());
+        }
+    } <span class="keyword">else</span> {
+        <span class="keyword">return</span> getReturn(jsonStr, <span class="number">500</span>, <span class="string">"call data empty"</span>);
+    }
+}
 </pre></td></tr></table></figure>
 
 <p>这是一个完整的解析匹配过程，会依据js层传入的方法名、参数类型列表再次生成方法签名，与之前初始化构造好的缓存对象中的方法匹配。匹配成功后则判断js调用参数类型中是否有number类型，如果有依据Java层方法的定义决定是取int、long还是double类型的值。最后使用调用值列表和方法对象反射执行，返回函数执行的结果。这里有几点需要注意：</p>
@@ -672,19 +624,9 @@ $.fn = {
 3
 4
 5
-6
-7
-8
-9
-10
 </pre></td><td class="code"><pre>&lt;script type=<span class="string">"text/javascript"</span>&gt;
     $(<span class="function"><span class="keyword">function</span> <span class="params">()</span> {</span>
-        HostApp.alert(<span class="string">"document ready now"</span>);
-        <span class="keyword">if</span> (HostApp.existVerticalScrollbar()) {
-            HostApp.setOnScrollBottomListener (<span class="number">40</span>, <span class="function"><span class="keyword">function</span> <span class="params">(contentHeight)</span> {</span>
-                HostApp.toast(<span class="string">"reach content(height "</span> + contentHeight + <span class="string">") bottom"</span>);
-            });
-        }
+        HostApp.alert(<span class="string">"HostApp ready now"</span>);
     });
 <span class="xml"><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span>
 </pre></td></tr></table></figure>
