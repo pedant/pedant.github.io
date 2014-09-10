@@ -1,0 +1,332 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Android WebView开发问题汇总及优化 | 书呆子精神院</title>
+  <meta name="author" content="Yanyuetian">
+  
+  <meta name="description" content="我们在native与网页相结合开发的过程中，难免会遇到关于WebView一些共通的问题。就我目前开发过程中遇到的问题以及最后得到的优化方案都将在这里列举出来。有些是老生常谈，有些则是个人摸索得出解决方法。下面就是整理得到的些干货。
+1.加快HTML网页装载完成的速度
+默认情况html代码下载到webview后，webkit开始解析网页各个节点，发现有外部样式文件或者外部脚本文件时，会异步发起网络请求下载文件，但如果在这之前也有解析到image节点，那势必也会发起网络请求下载相应的图片。在网络情况较差的情况下，过多的网络请求就会造成带宽紧张，影响到css或js文件加载完成的时间，造成页面空白loading过久。解决的方法就是告诉webview先不要自动加载图片，等页面finish后再发起图片加载。">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="Android WebView开发问题汇总及优化"/>
+  <meta property="og:site_name" content="书呆子精神院"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+  
+  <link href="/favicon.ico" rel="icon" type="image/x-ico">
+  <link rel="canonical" href="http://www.pedant.cn/2014/09/10/webview-optimize-points/" />
+  <link rel="alternate" href="/atom.xml" title="书呆子精神院" type="application/atom+xml">
+  
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="blog-header">
+  <h1><a href="/">书呆子精神院</a></h1>
+  <h2>一起发呆，一起发疯</h2>
+</div>
+<nav id="main-nav" class="blog-nav">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+      <li><a href="/about">关于</a></li>
+    
+    <li> <a href="/atom.xml">RSS</a> </li>
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    
+      <div id="main-col" class="alignleft"><div id="wrapper"><article class="android">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2014-09-10T10:13:04.000Z"><a href="/2014/09/10/webview-optimize-points/">9月10 2014</a></time>
+      
+      
+  
+    <h1 class="title">Android WebView开发问题汇总及优化</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>我们在native与网页相结合开发的过程中，难免会遇到关于WebView一些共通的问题。就我目前开发过程中遇到的问题以及最后得到的优化方案都将在这里列举出来。有些是老生常谈，有些则是个人摸索得出解决方法。下面就是整理得到的些干货。</p>
+<h3 id="1-加快HTML网页装载完成的速度">1.加快HTML网页装载完成的速度</h3>
+<p>默认情况html代码下载到webview后，webkit开始解析网页各个节点，发现有外部样式文件或者外部脚本文件时，会异步发起网络请求下载文件，但如果在这之前也有解析到image节点，那势必也会发起网络请求下载相应的图片。在网络情况较差的情况下，过多的网络请求就会造成带宽紧张，影响到css或js文件加载完成的时间，造成页面空白loading过久。解决的方法就是告诉webview先不要自动加载图片，等页面finish后再发起图片加载。</p>
+<a id="more"></a>
+
+<p>故在webview初始化时设置如下代码：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="code"><pre><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">int</span> () {
+    <span class="keyword">if</span>(Build.VERSION.SDK_INT &gt;= <span class="number">19</span>) {
+        webView.getSettings().setLoadsImagesAutomatically(<span class="keyword">true</span>);
+    } <span class="keyword">else</span> {
+        webView.getSettings().setLoadsImagesAutomatically(<span class="keyword">false</span>);
+    }
+}
+</pre></td></tr></table></figure>
+
+<p>同时在webview的WebViewClient实例中的onPageFinished()方法添加如下代码：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
+2
+3
+4
+5
+6
+</pre></td><td class="code"><pre><span class="annotation">@Override</span>
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onPageFinished</span>(WebView view, String url) {
+    <span class="keyword">if</span>(!webView.getSettings().getLoadsImagesAutomatically()) {
+        webView.getSettings().setLoadsImagesAutomatically(<span class="keyword">true</span>);
+    }
+}
+</pre></td></tr></table></figure>
+
+<p>从上面的代码，可以看出我们对系统API在19以上的版本作了兼容。因为4.4以上系统在onPageFinished时再恢复图片加载时,如果存在多张图片引用的是相同的src时，会只有一个image标签得到加载，因而对于这样的系统我们就先直接加载。</p>
+<h3 id="2-自定义出错界面">2.自定义出错界面</h3>
+<p>当webview加载页面出错时（一般为404 NOT FOUND），安卓webview会默认显示一个卖萌的出错界面。但我们怎么能让用户发现原来我使用的是网页应用呢，我们期望的是用户在网页上得到是如原生般应用的体验，那就先要从干掉这个默认出错页面开始。当webview加载出错时，我们会在WebViewClient实例中的onReceivedError()方法接收到错误，我们就在这里做些手脚：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
+2
+3
+4
+5
+6
+</pre></td><td class="code"><pre><span class="annotation">@Override</span>
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onReceivedError</span> (WebView view, <span class="keyword">int</span> errorCode, String description, String failingUrl) {
+    <span class="keyword">super</span>.onReceivedError(view, errorCode, description, failingUrl);
+    loadDataWithBaseURL(<span class="keyword">null</span>, <span class="string">""</span>, <span class="string">"text/html"</span>, <span class="string">"utf-8"</span>, <span class="keyword">null</span>);
+    mErrorFrame.setVisibility(View.VISIBLE);
+}
+</pre></td></tr></table></figure>
+
+<p>从上面可以看出， 我们先使用loadDataWithBaseURL清除内容，再让我们自定义的View得到显示（<strong>mErrorFrame</strong>为蒙在WebView之上的一个LinearLayout布局，默认为View.GONE）。</p>
+<h3 id="3-是否存在滚动条">3.是否存在滚动条</h3>
+<p>当我们做类似上拉加载下一页这样的功能的时候，页面初始的时候需要知道当前webview是否存在纵向滚动条，如果有则不加载下一页，如果没有则加载下一页直到其有纵向滚动条。首先继承WebView类，在子类添加下面的代码：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
+2
+3
+</pre></td><td class="code"><pre><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">existVerticalScrollbar</span> () {
+    <span class="keyword">return</span> computeVerticalScrollRange() &gt; computeVerticalScrollExtent();
+}
+</pre></td></tr></table></figure>
+
+<p>computeVerticalScrollRange得到的是可滑动的最大高度，computeVerticalScrollExtent得到的是滚动把手自身的高，当不存在滚动条时，两者的值是相等的。当有滚动条时前者一定是大于后者的。</p>
+<h3 id="4-是否已滚动到页面底部">4.是否已滚动到页面底部</h3>
+<p>同样我们在做上拉加载下一页这样的功能时，也需要知道当前页面滚动条所处的状态，如果快到底部，则要发起网络请求数据更新网页。同样继承WebView类，在子类覆盖onScrollChanged方法，具体如下：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+</pre></td><td class="code"><pre><span class="annotation">@Override</span>
+<span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onScrollChanged</span>(<span class="keyword">int</span> newX, <span class="keyword">int</span> newY, <span class="keyword">int</span> oldX, <span class="keyword">int</span> oldY) {
+    <span class="keyword">super</span>.onScrollChanged(newX, newY, oldX, oldY);
+    <span class="keyword">if</span> (newY != oldY) {
+        <span class="keyword">float</span> contentHeight = getContentHeight() * getScale();
+        <span class="comment">// 当前内容高度下从未触发过, 浏览器存在滚动条且滑动到将抵底部位置</span>
+        <span class="keyword">if</span> (mCurrContentHeight != contentHeight && newY &gt; <span class="number">0</span> && contentHeight &lt;= newY + getHeight() + mThreshold) {
+            <span class="comment">// TODO Something...</span>
+            mCurrContentHeight = contentHeight;
+        }
+    }
+}
+</pre></td></tr></table></figure>
+
+<p>上面mCurrContentHeight用于记录上次触发时的网页高度，用来防止在网页总高度未发生变化而目标区域发生连续滚动时会多次触发TODO，mThreshold是一个阈值，用来控制用户滚动到距离底部最大差值，差值&lt;=这个值时会触发TODO。</p>
+<p><strong>转载请注明出处链接，谢谢！！！</strong></p>
+
+      
+    </div>
+  
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/android/">android</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  
+  </div>
+</article>
+
+
+<section id="comment">
+<!-- Duoshuo Comment BEGIN -->
+	<div class="ds-thread"></div>
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"pedant"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = 'http://static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		|| document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+</script>
+<!-- Duoshuo Comment END -->
+</section>
+
+</div></div>
+      <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:www.pedant.cn">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/android/">android</a><small>4</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/cc++/">c/c++</a><small>1</small></li>
+  
+    <li><a href="/tags/java/">java</a><small>2</small></li>
+  
+    <li><a href="/tags/javascript/">javascript</a><small>1</small></li>
+  
+    <li><a href="/tags/jni/">jni</a><small>1</small></li>
+  
+    <li><a href="/tags/sqlite/">sqlite</a><small>1</small></li>
+  
+    <li><a href="/tags/webview/">webview</a><small>2</small></li>
+  
+    <li><a href="/tags/攻防安全/">攻防安全</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  <div class="widget tag">
+<h3 class="title">友情链接</h3>
+<ul class="entry">
+    <li><a href="http://blog.csdn.net/Luoshengyang/" title="老罗的Android之旅">老罗的Android之旅</a></li>
+    <li><a href="http://winterland.me/" title="冬的实验室">冬的实验室</a></li>
+    <li><a href="http://blog.codingnow.com/" title="云风的BLOG">云风的BLOG</a></li>
+</ul>
+</div>
+
+</aside>
+    
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="aligncenter">
+  
+  &copy; 2014 Yanyuetian
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="http://cdn.staticfile.org/jquery/2.1.1-rc2/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+
+<script type="text/javascript">
+    var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+    document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F3bf6ccabac425846443702b3673e9f8a' type='text/javascript'%3E%3C/script%3E"));
+</script>
+
+
+
+<div id="scroll2top">
+<img src="/scroll2top/arrow.png"/>
+</div>
+<script src="/scroll2top/scroll2top.js"></script>
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script src="https://www.zybuluo.com/static/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</script>
+  <!-- Baidu Button BEGIN -->
+    <script type="text/javascript" id="bdshare_js" data="type=slide&amp;img=1&amp;mini=1&amp;pos=left&amp;uid=6871901" ></script>
+    <script type="text/javascript" id="bdshell_js"></script>
+    <script type="text/javascript" src="/js/bds_animate.js"></script>
+    <script type="text/javascript">
+    var bds_config={"bdTop":0};
+    document.getElementById("bdshell_js").src = "http://bdimg.share.baidu.com/static/js/shell_v2.js?cdnversion=" + Math.ceil(new Date()/3600000);
+    </script>
+ <!-- Baidu Button END -->
+
+</body>
+</html>

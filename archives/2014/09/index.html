@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   
-  <title>归档：2014/7 | 书呆子精神院</title>
+  <title>归档：2014/9 | 书呆子精神院</title>
   <meta name="author" content="Yanyuetian">
   
   
@@ -17,7 +17,7 @@
   
   
   <link href="/favicon.ico" rel="icon" type="image/x-ico">
-  <link rel="canonical" href="http://www.pedant.cn/archives/2014/07/" />
+  <link rel="canonical" href="http://www.pedant.cn/archives/2014/09/" />
   <link rel="alternate" href="/atom.xml" title="书呆子精神院" type="application/atom+xml">
   
   <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
@@ -47,7 +47,7 @@
   <div id="content" class="inner">
     
       <div id="main-col" class="alignleft"><div id="wrapper">
-<h2 class="archive-title">2014/7</h2>
+<h2 class="archive-title">2014/9</h2>
 
 
   
@@ -69,17 +69,19 @@
     <header>
       
         <div class="icon"></div>
-        <time datetime="2014-07-04T06:53:54.000Z"><a href="/2014/07/04/webview-js-java-interface-research/">7月04 2014</a></time>
+        <time datetime="2014-09-10T10:13:04.000Z"><a href="/2014/09/10/webview-optimize-points/">9月10 2014</a></time>
       
       
   
-    <h1 class="title"><a href="/2014/07/04/webview-js-java-interface-research/">在WebView中如何让JS与Java安全地互相调用</a></h1>
+    <h1 class="title"><a href="/2014/09/10/webview-optimize-points/">Android WebView开发问题汇总及优化</a></h1>
   
 
     </header>
     <div class="entry">
       
-        <p>在现在安卓应用原生开发中，为了追求开发的效率以及移植的便利性，使用WebView作为业务内容展示与交互的主要载体是个不错的折中方案。那么在这种Hybrid(混合式) App中，难免就会遇到页面JS需要与Java相互调用，调用Java方法去做那部分网页JS不能完成的功能。</p>
+        <p>我们在native与网页相结合开发的过程中，难免会遇到关于WebView一些共通的问题。就我目前开发过程中遇到的问题以及最后得到的优化方案都将在这里列举出来。有些是老生常谈，有些则是个人摸索得出解决方法。下面就是整理得到的些干货。</p>
+<h3 id="1-加快HTML网页装载完成的速度">1.加快HTML网页装载完成的速度</h3>
+<p>默认情况html代码下载到webview后，webkit开始解析网页各个节点，发现有外部样式文件或者外部脚本文件时，会异步发起网络请求下载文件，但如果在这之前也有解析到image节点，那势必也会发起网络请求下载相应的图片。在网络情况较差的情况下，过多的网络请求就会造成带宽紧张，影响到css或js文件加载完成的时间，造成页面空白loading过久。解决的方法就是告诉webview先不要自动加载图片，等页面finish后再发起图片加载。</p>
 
       
     </div>
@@ -89,12 +91,12 @@
         
   
   <div class="tags">
-    <a href="/tags/webview/">webview</a>, <a href="/tags/javascript/">javascript</a>, <a href="/tags/java/">java</a>, <a href="/tags/攻防安全/">攻防安全</a>
+    <a href="/tags/webview/">webview</a>
   </div>
 
         
           <div style="text-align:center;">
-            <a href="/2014/07/04/webview-js-java-interface-research/#more" class="more-link">阅读全文</a>
+            <a href="/2014/09/10/webview-optimize-points/#more" class="more-link">阅读全文</a>
           </div>
                 
         
