@@ -73,7 +73,7 @@
       
       
   
-    <h1 class="title"><a href="/2014/09/10/webview-optimize-points/">Android WebView开发问题汇总及优化</a></h1>
+    <h1 class="title"><a href="/2014/09/10/webview-optimize-points/">Android WebView开发问题及优化汇总</a></h1>
   
 
     </header>
@@ -81,7 +81,7 @@
       
         <p>我们在native与网页相结合开发的过程中，难免会遇到关于WebView一些共通的问题。就我目前开发过程中遇到的问题以及最后得到的优化方案都将在这里列举出来。有些是老生常谈，有些则是个人摸索得出解决方法。下面就是整理得到的些干货。</p>
 <h3 id="1-加快HTML网页装载完成的速度">1.加快HTML网页装载完成的速度</h3>
-<p>默认情况html代码下载到webview后，webkit开始解析网页各个节点，发现有外部样式文件或者外部脚本文件时，会异步发起网络请求下载文件，但如果在这之前也有解析到image节点，那势必也会发起网络请求下载相应的图片。在网络情况较差的情况下，过多的网络请求就会造成带宽紧张，影响到css或js文件加载完成的时间，造成页面空白loading过久。解决的方法就是告诉webview先不要自动加载图片，等页面finish后再发起图片加载。</p>
+<p>默认情况html代码下载到WebView后，webkit开始解析网页各个节点，发现有外部样式文件或者外部脚本文件时，会异步发起网络请求下载文件，但如果在这之前也有解析到image节点，那势必也会发起网络请求下载相应的图片。在网络情况较差的情况下，过多的网络请求就会造成带宽紧张，影响到css或js文件加载完成的时间，造成页面空白loading过久。解决的方法就是告诉WebView先不要自动加载图片，等页面finish后再发起图片加载。</p>
 
       
     </div>
@@ -91,7 +91,7 @@
         
   
   <div class="tags">
-    <a href="/tags/webview/">webview</a>
+    <a href="/tags/java/">java</a>, <a href="/tags/webview/">webview</a>
   </div>
 
         
@@ -200,7 +200,7 @@
   
     <li><a href="/tags/cc++/">c/c++</a><small>1</small></li>
   
-    <li><a href="/tags/java/">java</a><small>2</small></li>
+    <li><a href="/tags/java/">java</a><small>3</small></li>
   
     <li><a href="/tags/javascript/">javascript</a><small>1</small></li>
   
@@ -280,14 +280,12 @@
 <script src="https://www.zybuluo.com/static/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 </script>
   <!-- Baidu Button BEGIN -->
-    <script type="text/javascript" id="bdshare_js" data="type=slide&amp;img=1&amp;mini=1&amp;pos=left&amp;uid=6871901" ></script>
-    <script type="text/javascript" id="bdshell_js"></script>
-    <script type="text/javascript" src="/js/bds_animate.js"></script>
-    <script type="text/javascript">
-    var bds_config={"bdTop":0};
-    document.getElementById("bdshell_js").src = "http://bdimg.share.baidu.com/static/js/shell_v2.js?cdnversion=" + Math.ceil(new Date()/3600000);
-    </script>
+<script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"1","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"1","bdPos":"left","bdTop":"250"}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
  <!-- Baidu Button END -->
+
+
+
+
 
 </body>
 </html>
