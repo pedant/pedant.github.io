@@ -136,7 +136,7 @@
 50
 51
 52
-</pre></td><td class="code"><pre><span class="keyword">public</span> <span class="title">JsCallJava</span> (Class injectedCls) {
+</pre></td><td class="code"><pre><span class="keyword">public</span> <span class="title">JsCallJava</span> (String injectedName, Class injectedCls) {
     <span class="keyword">try</span> {
         mMethodsMap = <span class="keyword">new</span> HashMap&lt;String, Method&gt;();
         <span class="comment">//获取自身声明的所有方法（包括public private protected）， getMethods会获得所有继承与非继承的方法</span>
@@ -152,7 +152,7 @@
             sb.append(String.format(<span class="string">"a.%s="</span>, method.getName()));
         }
 
-        sb.append(<span class="string">"function(){var f=Array.prototype.slice.call(arguments,0);if(f.length&lt;1){throw\"HostApp call error, message:miss method name\"}var e=[];for(var h=1;h&lt;f.length;h++){var c=f[h];var j=typeof c;e[e.length]=j;if(j==\"function\"){var d=a.queue.length;a.queue[d]=c;f[h]=d}}var g=JSON.parse(prompt(JSON.stringify({method:f.shift(),types:e,args:f})));if(g.code!=200){throw\"HostApp call error, code:\"+g.code+\", message:\"+g.result}return g.result};Object.getOwnPropertyNames(a).forEach(function(d){var c=a[d];if(typeof c===\"function\"&&d!==\"callback\"){a[d]=function(){return c.apply(a,[d].concat(Array.prototype.slice.call(arguments,0)))}}});b.HostApp=a;console.log(\"HostApp initialization end\")})(window);"</span>);
+        sb.append(<span class="string">"function(){var f=Array.prototype.slice.call(arguments,0);if(f.length&lt;1){throw\"HostApp call error, message:miss method name\"}var e=[];for(var h=1;h&lt;f.length;h++){var c=f[h];var j=typeof c;e[e.length]=j;if(j==\"function\"){var d=a.queue.length;a.queue[d]=c;f[h]=d}}var g=JSON.parse(prompt(JSON.stringify({method:f.shift(),types:e,args:f})));if(g.code!=200){throw\"HostApp call error, code:\"+g.code+\", message:\"+g.result}return g.result};Object.getOwnPropertyNames(a).forEach(function(d){var c=a[d];if(typeof c===\"function\"&&d!==\"callback\"){a[d]=function(){return c.apply(a,[d].concat(Array.prototype.slice.call(arguments,0)))}}});b."</span> + injectedName + <span class="string">"=a;console.log(\"HostApp initialization end\")})(window);"</span>);
         mPreloadInterfaceJS = sb.toString();
     } <span class="keyword">catch</span>(Exception e){
         Log.e(TAG, <span class="string">"init js error:"</span> + e.getMessage());
@@ -327,8 +327,8 @@
 <figure class="highlight JAVA"><figcaption><span>InjectedChromeClient.java</span></figcaption><table><tr><td class="gutter"><pre>1
 2
 3
-</pre></td><td class="code"><pre><span class="keyword">public</span> <span class="title">InjectedChromeClient</span> (Class injectedCls) {
-    mJsCallJava = <span class="keyword">new</span> JsCallJava(injectedCls);
+</pre></td><td class="code"><pre><span class="keyword">public</span> <span class="title">InjectedChromeClient</span> (String injectedName, Class injectedCls) {
+    mJsCallJava = <span class="keyword">new</span> JsCallJava(injectedName, injectedCls);
 }
 </pre></td></tr></table></figure><br>从步骤一的代码，我们知道JsCallJava拼接出来的JS代码暂时被存到mPreloadInterfaceJS字段中。那么我们何时把这段代码串注入到Webview的页面空间内呢？答案是页面加载进度变化的过程中。<br><figure class="highlight JAVA"><figcaption><span>InjectedChromeClient.java</span></figcaption><table><tr><td class="gutter"><pre>1
 2
