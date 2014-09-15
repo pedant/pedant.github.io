@@ -10,7 +10,7 @@
 1.加快HTML网页装载完成的速度
 默认情况html代码下载到WebView后，webkit开始解析网页各个节点，发现有外部样式文件或者外部脚本文件时，会异步发起网络请求下载文件，但如果在这之前也有解析到image节点，那势必也会发起网络请求下载相应的图片。在网络情况较差的情况下，过多的网络请求就会造成带宽紧张，影响到css或js文件加载完成的时间，造成页面空白loading过久。解决的方法就是告诉WebView先不要自动加载图片，等页面finish后再发起图片加载。">
   
-  
+  <meta name="keywords" content="WebView开发,WebView问题,WebView优化,WebView总结,问题改进,网页加载">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
   <meta property="og:title" content="Android WebView开发问题及优化汇总"/>
