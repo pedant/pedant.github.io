@@ -271,7 +271,9 @@
 }
 </pre></td></tr></table></figure>
 
-<h3 id="8-WebView与上层父元素的TouchMove事件冲突">8.WebView与上层父元素的TouchMove事件冲突</h3>
+<h3 id="8-避免addJavaScriptInterface带来的安全问题">8.避免addJavaScriptInterface带来的安全问题</h3>
+<p>使用开源项目<a href="https://github.com/pedant/safe-java-js-webview-bridge" target="_blank" rel="external">Safe Java-JS WebView Bridge</a>可以很好替代addJavaScriptInterface方法，同时增加了异步回调等支持，并且不存在了安全风险。</p>
+<h3 id="9-WebView与上层父元素的TouchMove事件冲突">9.WebView与上层父元素的TouchMove事件冲突</h3>
 <p>在开发过程中你可能会遇到这样一种情况。端里面使用ViewPager嵌套了多个WebView页面，同时某一个WebView中的页面元素需要响应TouchMove事件。正如下图所示的情景：</p>
 <p><img src="/images/webparent_touch_conflict.jpg" alt="image"></p>
 <p>这时你就会发现上层（ViewPager）阻断了下层（WebView）接收TouchMove事件，即使你的WebView在TouchDown时返回true也无效，因为上层直接使用了onInterceptTouchEvent对后续的TouchMove进行了拦截。针对这个问题的解决，<strong>简单做法</strong>是在重写WebView onTouchEvent方法，如下：</p>
@@ -348,7 +350,7 @@
 <span class="xml"><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span>
 </pre></td></tr></table></figure>
 
-<p>关于web页面如何通知WebView(即调用Java方法)请参看<a href="#9-避免addJavaScriptInterface带来的安全问题">第9条</a>。</p>
+<p>关于web页面如何通知WebView(即调用Java方法)请参看<a href="#8-避免addJavaScriptInterface带来的安全问题">第8条</a>。</p>
 <p>刚提到了上面是一种简单的做法，并不能很好的解决手指滑动过快带来的误操作问题，即当用户快速地滑动时，还是有一定机率会出现ViewPager拦截TouchMove事件而发生了Tab切换而非页面元素做出了响应。要<strong>完美解决</strong>此问题，就要用到<strong>稍微复杂</strong>一点的方法（仅是整体消息传递流程复杂一点）。</p>
 <p>首先假设在ViewPager之上还有一个父元素叫做ParentViewOnViewPager，当我们接收到页面preventParentTouchEvent通知时就先于ViewPager而进行拦截。如下：</p>
 <figure class="highlight JAVA"><figcaption><span>ParentViewOnViewPager.java</span></figcaption><table><tr><td class="gutter"><pre>1
@@ -449,8 +451,6 @@
 </pre></td></tr></table></figure>
 
 <p>另外针对这种解决方案，页面端的JS脚本不用做任何变动。</p>
-<h3 id="9-避免addJavaScriptInterface带来的安全问题">9.避免addJavaScriptInterface带来的安全问题</h3>
-<p>使用开源项目<a href="https://github.com/pedant/safe-java-js-webview-bridge" target="_blank" rel="external">Safe Java-JS WebView Bridge</a>可以很好替代addJavaScriptInterface方法，同时增加了异步回调等支持，并且不存在了安全风险。</p>
 <p><strong>转载请注明出处链接，谢谢！！！</strong></p>
 
       
