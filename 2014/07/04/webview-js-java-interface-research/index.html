@@ -82,6 +82,7 @@
 <p>网上的方法可以告诉我们这个时候我们可以使用<strong>addjavascriptInterface</strong>来注入原生接口到JS中，但是在安卓4.2以下的系统中，这种方案却我们的应用带来了很大的安全风险。攻击者如果在页面执行一些非法的JS（诱导用户打开一些钓鱼网站以进入风险页面），极有可能反弹拿到用户手机的shell权限。接下来攻击者就可以在后台默默安装木马，完全洞穿用户的手机。详细的攻击过程可以见乌云平台的这份报告：<a href="http://drops.wooyun.org/papers/548" target="_blank" rel="external">WebView中接口隐患与手机挂马利用</a>。</p>
 <p>安卓4.2及以上版本（API &gt;= 17），在注入类中为可调用的方法添加@JavascriptInterface注解，无注解的方法不能被调用，这种方式可以防范注入漏洞。那么有没一种安全的方式，可以完全兼顾安卓4.2以下版本呢？答案就是使用prompt，即WebChromeClient 输入框弹出模式。</p>
 <p>我们参照 <a href="http://blog.csdn.net/leehong2005/article/details/11808557" target="_blank" rel="external">Android WebView的Js对象注入漏洞解决方案</a> 这篇文章给出的解决方案， 但它JS下的方法有点笨拙， 动态生成JS文件过程也并没有清晰，且加载JS文件的时机也没有准确把握。那么如何改造才能便利地在JS代码中调用Java方法，并且安全可靠呢？</p>
+<p>下面提到的<strong>源码及项目</strong>可以在这找到<a href="https://github.com/pedant/safe-java-js-webview-bridge" target="_blank" rel="external">Safe Java-JS Bridge In Android WebView[Github]</a>。</p>
 <h3 id="一、动态地生成将注入的JS代码">一、动态地生成将注入的JS代码</h3>
 <p>JsCallJava在构造时，将要注入类的public且static方法拿出来，逐个生成方法的签名，依据方法签名先将方法缓存起来，同时结合方法名称与静态的HostApp-JS代码动态生成一段将要注入到webview中的字符串。</p>
 <figure class="highlight JAVA"><figcaption><span>JsCallJava.java</span></figcaption><table><tr><td class="gutter"><pre>1
