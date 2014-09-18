@@ -1,0 +1,372 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Windows下将ImageMagick移植到Android平台 | 书呆子精神院</title>
+  <meta name="author" content="Yanyuetian">
+  
+  <meta name="description" content="ImageMagick是一个用来创建、编辑、合成图片的软件。它可以读取、转换、写入多种格式的图片。在移动平台做一些较复杂的图像处理时，难免会请出这尊大神。官方网站上也说明了它可以运行在多个平台之上，包括Android。不过官方的Releases版本只有Unix、Mac OS X、IOS、Windows，并有把针对Android各种架构发布现成的二进制包。不过好在它完全是开源的，我们完全可以下载源码然后自己交叉编译(Cross-Compile)出基于arm、x86、mips运行系统的静态链接库，这样就可以在目前的Android全平台下跑起来了。
+一般我们办公都在Windows平台，可是要用源码交叉编译(Source Cross-Compile)就得使用GNU环境，如果单独装一个linux虚拟机再来编译这个太过麻烦。我们可以在windows上使用MinGW工具来模拟一套GNU环境。">
+  
+  <meta name="keywords" content="ImageMagick移植,Android移植,fftw移植,jpeg移植,libpng移植,交叉编译,Cross-Compile,NDK工具链">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="Windows下将ImageMagick移植到Android平台"/>
+  <meta property="og:site_name" content="书呆子精神院"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+  
+  <link href="/favicon.ico" rel="icon" type="image/x-ico">
+  <link rel="canonical" href="http://www.pedant.cn/2014/06/18/imagemagick-ported-android/" />
+  <link rel="alternate" href="/atom.xml" title="书呆子精神院" type="application/atom+xml">
+  
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="blog-header">
+  <h1><a href="/">书呆子精神院</a></h1>
+  <h2>一起发呆，一起发疯</h2>
+</div>
+<nav id="main-nav" class="blog-nav">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+      <li><a href="/about">关于</a></li>
+    
+    <li> <a href="/atom.xml">RSS</a> </li>
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    
+      <div id="main-col" class="alignleft"><div id="wrapper"><article class="android">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2014-06-18T03:15:29.000Z"><a href="/2014/06/18/imagemagick-ported-android/">6月18 2014</a></time>
+      
+      
+  
+    <h1 class="title">Windows下将ImageMagick移植到Android平台</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>ImageMagick是一个用来创建、编辑、合成图片的软件。它可以读取、转换、写入多种格式的图片。在移动平台做一些较复杂的图像处理时，难免会请出这尊大神。<a href="http://www.imagemagick.org/index.php" target="_blank" rel="external">官方网站上</a>也说明了它可以运行在多个平台之上，包括Android。不过官方的Releases版本只有Unix、Mac OS X、IOS、Windows，并有把针对Android各种架构发布现成的二进制包。不过好在它完全是开源的，我们完全可以下载源码然后自己交叉编译(Cross-Compile)出基于arm、x86、mips运行系统的静态链接库，这样就可以在目前的Android全平台下跑起来了。</p>
+<p>一般我们办公都在Windows平台，可是要用源码交叉编译(Source Cross-Compile)就得使用GNU环境，如果单独装一个linux虚拟机再来编译这个太过麻烦。我们可以在windows上使用MinGW工具来模拟一套GNU环境。</p>
+<a id="more"></a>
+
+<p>通常仅有ImageMagick源码是不够的，还需要一些依赖包（比如图像格式处理库）等。同时整个编译过程还需要你机子上有其他环境。总体上我使用了下面这些：</p>
+<ul>
+<li>MinGW v0.6.2</li>
+<li>Android NDK(android-ndk-r9c)</li>
+<li>fftw-3.3.4(快速离散傅里叶变换处理库)</li>
+<li>jpegsrc.v9a(jpeg、jpg图片格式处理库)</li>
+<li>libpng-1.6.13(png图片格式处理库)</li>
+<li>ImageMagick-6.8.8(主库)</li>
+</ul>
+<p>这里用到所有的资源我都打包在云盘处 <a href="http://yunpan.cn/Q7Uxr5T3XRxIa" target="_blank" rel="external">http://yunpan.cn/Q7Uxr5T3XRxIa</a> （提取码：2b2f）。</p>
+<h3 id="1-MinGW安装">1.MinGW安装</h3>
+<p>工欲善其事必先利其器。只有把必要的环境准备好了，办起事来才会事半功倍。最新版本的MinGW你可从这里 <a href="http://sourceforge.net/projects/mingw" target="_blank" rel="external">http://sourceforge.net/projects/mingw</a> 下载到最新的exe安装程序。这里 <a href="http://www.wowotech.net/soft/6.html" target="_blank" rel="external">http://www.wowotech.net/soft/6.html</a> 也有详细的安装过程，不过需要注意的是在MinGW Installation Manager选择安装包时我们要选上C++编译器和一些MSYS make工具。</p>
+<p>安装完成之后，我们可以到安装目录的<strong>msys\1.0</strong>下找到msys.bat，从这里我们就可以启动命令行了。启动之前我们就使用下面的命令下载美化程序mintty（不使用mintty的话自带的命令行太难用）</p>
+<blockquote>
+
+<p>\$ mingw-get install msys-mintty</p>
+</blockquote>
+
+
+<p>之后，在桌面上建立指向”安装目录\msys\1.0\msys.bat —mintty”的快捷方式，以后我们都从这里直接启动命令行了。</p>
+<h3 id="2-生成各平台独立工具链">2.生成各平台独立工具链</h3>
+<p>首先cd到NDK目录（我这里是android-ndk-r9c）/build/tools下，运行<strong>下面三行</strong>代码：</p>
+<blockquote>
+
+<p>\$ make-standalone-toolchain.sh —platform=android-19 —system=windows-x86_64 —ndk-dir=/d/envcom/android-ndk-r9c —install-dir=/d/opensrc/arm-19-toolchain</p>
+<p>\$ make-standalone-toolchain.sh —platform=android-19 —system=windows-x86_64 —ndk-dir=/d/envcom/android-ndk-r9c —install-dir=/d/opensrc/x86-19-toolchain —arch=x86</p>
+<p>\$ make-standalone-toolchain.sh —platform=android-19 —system=windows-x86_64 —ndk-dir=/d/envcom/android-ndk-r9c —install-dir=/d/opensrc/mips-19-toolchain —arch=mips</p>
+</blockquote>
+
+
+<p>注：/d/envcom/android-ndk-r9c 为NDK安装目录。</p>
+<p>这样就生成了arm、x86、mips三个独立的工具链分别到arm-19-toolchain、x86-19-toolchain、mips-19-toolchain三个目录。</p>
+<h3 id="3-交叉编译ARM平台各项">3.交叉编译ARM平台各项</h3>
+<h4 id="1)-设置环境变量PATH">1).设置环境变量PATH</h4>
+<p>编译arm平台下静态链接库前首先用下面的命令设置环境变量PATH：</p>
+<blockquote>
+
+<p>\$ export PATH=.:/d/opensrc/arm-19-toolchain/bin:/usr/local/bin:/mingw/bin:/bin</p>
+</blockquote>
+
+
+<p>这样，编译时查找各执行程序（编译程序gcc,g++,链接程序）会去这些目录下匹配。</p>
+<h4 id="2)-设置环境变量INCLUDE_PATH">2).设置环境变量INCLUDE_PATH</h4>
+<p>如果不设置头文件默认查找位置，mingw会到其安装目录的include文件夹下去匹配，而这是相当危险的。因为根据交叉编译的目标平台的不同，运行的指令集也不尽相同，那么头文件中的配置、参数对象构成也会不同。在交叉编译时如果头文件引用错误，configure或者make时都可能会发生异常。我们现在针对arm指令集就必须执行下面的命令：</p>
+<blockquote>
+
+<p>\$ export C_INCLUDE_PATH=/d/opensrc/arm-19-toolchain/sysroot/usr/include</p>
+<p>\$ export CPLUS_INCLUDE_PATH=/d/opensrc/arm-19-toolchain/sysroot/usr/include</p>
+</blockquote>
+
+
+<p>尝试过在configure时使用 —with-sysroot=/d/opensrc/arm-19-toolchain/sysroot 来替换上面做法，但并<strong>不凑效</strong>。</p>
+<p>另外尝试将C_INCLUDE_PATH和CPLUS_INCLUDE_PATH配置直接附加到configure命令的末尾来替换上面做法，虽然最后列出的清单没有异常，但下一步<strong>make时会发生异常</strong>。</p>
+<h4 id="3)-交叉编译FFTW">3).交叉编译FFTW</h4>
+<p>首先cd到fftw源码目录下，configure项目。这里根据目标文件安装位置的不同，命令和配置也不相同。你可以选择直接安装到mingw环境（默认），供以后所有有需要的项目使用。也可以直接安装到ImageMagick的源码目录下的fftw处，只针对ImageMagick项目交叉编译使用。这里我两种方式都说明一下。</p>
+<p><strong>安装到MinGW环境的话</strong>，执行下面这几条命令：</p>
+<blockquote>
+
+<p>\$ ./configure —host=arm-linux-androideabi —disable-shared</p>
+<p>\$ make</p>
+<p>\$ make install</p>
+</blockquote>
+
+
+<p>另外还需改动下环境变量，告诉链接程序库文件和头文件显式引用位置</p>
+<blockquote>
+
+<p>\$ export C_INCLUDE_PATH=/d/opensrc/arm-19-toolchain/sysroot/usr/include:/usr/local/include</p>
+<p>\$ export LIBS=”-L/usr/local/lib”</p>
+</blockquote>
+
+
+<p><strong>安装到ImageMagick目录的话</strong>，则只需要执行下面这三条命令：</p>
+<blockquote>
+
+<p>\$ ./configure —host=arm-linux-androideabi —disable-shared —prefix=/d/opensrc/imgic-6.8.8/fftw —libdir=/d/opensrc/imgic-6.8.8/fftw —includedir=/d/opensrc/imgic-6.8.8/fftw</p>
+<p>\$ make</p>
+<p>\$ make install</p>
+</blockquote>
+
+
+<p>注：/d/opensrc/imgic-6.8.8为ImageMagick源码目录</p>
+<h4 id="4)-交叉编译JPEG">4).交叉编译JPEG</h4>
+<p>首先cd到jpeg源码目录下，configure项目。整个过程与fftw交叉编译类似。不同的是，如果安装到MinGW环境的话，不再需要设置环境变量了，因为fftw编译完成时已经设置过了（<strong>注意fftw、jpeg、png只能一起选择同一种安装方式，不能两个项目的安装到的位置不同</strong>）。如果安装到ImageMagick目录的话，把目录名fftw换成jpeg即可。详细如下：</p>
+<p>安装到MinGW环境：</p>
+<blockquote>
+
+<p>\$ ./configure —host=arm-linux-androideabi —disable-shared</p>
+<p>\$ make</p>
+<p>\$ make install</p>
+</blockquote>
+
+
+<p>安装到ImageMagick目录，则只需要执行下面这三条命令：</p>
+<blockquote>
+
+<p>\$ ./configure —host=arm-linux-androideabi —disable-shared —prefix=/d/opensrc/imgic-6.8.8/jpeg —libdir=/d/opensrc/imgic-6.8.8/jpeg —includedir=/d/opensrc/imgic-6.8.8/jpeg</p>
+<p>\$ make</p>
+<p>\$ make install</p>
+</blockquote>
+
+
+<h4 id="5)-交叉编译PNG">5).交叉编译PNG</h4>
+<p>首先cd到png源码目录下，configure项目。整个过程<strong>同样</strong>与fftw交叉编译类似。如安装到ImageMagick目录，仅把目录名fftw换成png即可。</p>
+<h4 id="6)-交叉编译ImageMagick">6).交叉编译ImageMagick</h4>
+<p>有了上面这些准备工作，交叉编译ImageMagick就容易很多了。</p>
+<p>直接cd到ImageMagick源码目录，执行下面的命令：</p>
+<blockquote>
+
+<p>\$ ./configure —host=arm-linux-androideabi —prefix=/d/opensrc/imgic-out —disable-shared —enable-delegate-build —without-rsvg —disable-opencl —disable-largefile —without-perl —without-x —disable-openmp —without-bzlib —without-freetype</p>
+</blockquote>
+
+
+<p>这里我们关闭了一些用不到的开关，—prefix=/d/opensrc/imgic-out 将输出目录指定。敲进去之后，一杯咖啡的时间，你就会看到命令行生成了像下面这样的清单。</p>
+<p><img src="/images/imgic_conf_reslist.jpg" alt="image"></p>
+<p>看着fftw、jpeg、png、imagemagick++都是yes，也就可以安心地继续往下执行make了，又是一杯咖啡的时间，就可以make install了。于是我们的第一个基于arm移动平台的ImageMagick静态链接库集合就大功告成。</p>
+<h3 id="4-交叉编译x86平台各项">4.交叉编译x86平台各项</h3>
+<p>交叉编译x86平台与交叉编译arm平台过程基本一致，不同的是中间一些目录和设置<strong>稍有不同</strong>。</p>
+<ul>
+<li>在每个源码目录make前记得<strong>make clean</strong></li>
+<li>把arm过程中所有命令出现的 arm-19-toolchain 替换成 <strong>x86-19-toolchain</strong></li>
+<li>把arm过程中所有命令出现的 —host=arm-linux-androideabi 替换成 <strong>—host=i686-linux-android</strong></li>
+</ul>
+<h3 id="5-交叉编译mips平台各项">5.交叉编译mips平台各项</h3>
+<p>交叉编译mips平台与交叉编译arm平台过程基本一致，不同的是中间一些目录和设置<strong>稍有不同</strong>。</p>
+<ul>
+<li>在每个源码目录make前记得<strong>make clean</strong></li>
+<li>把arm过程中所有命令出现的 arm-19-toolchain 替换成 <strong>mips-19-toolchain</strong></li>
+<li>把arm过程中所有命令出现的 —host=arm-linux-androideabi 替换成 <strong>—host=mipsel-linux-android</strong></li>
+</ul>
+<p>至此，Android平台所有指令集架构下的<strong>静态链接库集</strong>都交叉编译完成。这样我们就可以在JNI编码打包时将各静态库(.a文件)作为单独的MODULE引入使用了。</p>
+<p>最终生成的目标文件集合包我也都放在了云盘处 <a href="http://yunpan.cn/Q7UxIiMiaDyXG" target="_blank" rel="external">http://yunpan.cn/Q7UxIiMiaDyXG</a> （提取码：f297）。</p>
+<p><strong>欢迎转载，请注明出处链接！！！</strong></p>
+
+      
+    </div>
+  
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/android/">android</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  
+  </div>
+</article>
+
+
+<section id="comment">
+<!-- Duoshuo Comment BEGIN -->
+	<div class="ds-thread"></div>
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"pedant"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = 'http://static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		|| document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+</script>
+<!-- Duoshuo Comment END -->
+</section>
+
+</div></div>
+      <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:www.pedant.cn">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/android/">android</a><small>5</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/cc++/">c/c++</a><small>2</small></li>
+  
+    <li><a href="/tags/java/">java</a><small>3</small></li>
+  
+    <li><a href="/tags/javascript/">javascript</a><small>1</small></li>
+  
+    <li><a href="/tags/jni/">jni</a><small>2</small></li>
+  
+    <li><a href="/tags/sqlite/">sqlite</a><small>1</small></li>
+  
+    <li><a href="/tags/webview/">webview</a><small>2</small></li>
+  
+    <li><a href="/tags/库移植/">库移植</a><small>1</small></li>
+  
+    <li><a href="/tags/攻防安全/">攻防安全</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  <div class="widget tag">
+<h3 class="title">友情链接</h3>
+<ul class="entry">
+    <li><a href="http://blog.csdn.net/Luoshengyang/" title="老罗的Android之旅">老罗的Android之旅</a></li>
+    <li><a href="http://winterland.me/" title="冬的实验室">冬的实验室</a></li>
+    <li><a href="http://blog.codingnow.com/" title="云风的BLOG">云风的BLOG</a></li>
+</ul>
+</div>
+
+</aside>
+    
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="aligncenter">
+  
+  &copy; 2014 Yanyuetian
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="http://cdn.staticfile.org/jquery/2.1.1-rc2/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+
+<script type="text/javascript">
+    var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+    document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F3bf6ccabac425846443702b3673e9f8a' type='text/javascript'%3E%3C/script%3E"));
+</script>
+
+
+
+<div id="scroll2top">
+<img src="/scroll2top/arrow.png"/>
+</div>
+<script src="/scroll2top/scroll2top.js"></script>
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script src="https://www.zybuluo.com/static/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</script>
+  <!-- Baidu Button BEGIN -->
+<script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"1","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"1","bdPos":"left","bdTop":"250"}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+ <!-- Baidu Button END -->
+
+
+
+
+
+</body>
+</html>

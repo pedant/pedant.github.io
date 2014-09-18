@@ -49,79 +49,27 @@
       <div id="main-col" class="alignleft"><div id="wrapper">
 <h2 class="archive-title tag">sqlite</h2>
 
+<div class="archive">
 
-  
-    <article class="android">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
+  <article class="android">
+    <div class="post-content">
+      <header>
         <div class="icon"></div>
         <time datetime="2014-08-01T02:57:29.000Z"><a href="/2014/08/01/sqliteopenhelper-onupgrade-ondowngrade-handle/">8月01 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/08/01/sqliteopenhelper-onupgrade-ondowngrade-handle/">App版本更新时对SQLite数据库升级或者降级遇到的问题</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>SQLite是Android内置的一个很小的关系型数据库。SQLiteOpenHelper是一个用来辅助管理数据库创建和版本升级问题的抽象类。我们可以继承这个抽象类，实现它的一些方法来对数据库进行自定义操作。下面两个方法必须重写：</p>
-<ul>
-<li>public void onCreate(SQLiteDatabase db)</li>
-<li>public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)</li>
-</ul>
-<p>另外SQLiteOpenHelper子类在构造实例时必须指定当前数据库的名称（name）、版本号（version）。而这里名称就决定了数据库存储时的文件名称，而这里的版本号与App在AndroidMainfest.xml定义的versionCode没有绝对关联。也就是在App更新时如果数据库的数据结构没有发生变化那么数据库的版本号则不用增加。</p>
-<p>onCreate：调用时机是用户首次安装应用后启动，或是清除App数据库文件后启动。这时可以在这个函数中完成初始的数据表的创建。</p>
-<p>onUpgrade：调用时机是用户在做应用更新，覆盖安装后启动，如果新版本中数据库版本号要比旧版本中的数据库版本号高则会调用。这时可以在这个函数完成数据库版本升级带来的旧版本的兼容问题，以及数据迁移问题。</p>
-
-      
+        
+          <h1 class="title"><a href="/2014/08/01/sqliteopenhelper-onupgrade-ondowngrade-handle/">App版本更新时对SQLite数据库升级或者降级遇到的问题</a></h1>
+        
+      </header>
     </div>
-  
-    <footer>
-            
-        
-  
-  <div class="tags">
-    <a href="/tags/sqlite/">sqlite</a>, <a href="/tags/java/">java</a>
-  </div>
+    <DIV style="margin-left: 70px;margin-right:20px;BACKGROUND: #ccc; HEIGHT: 1px; font-size:0px; OVERFLOW: hidden;"></DIV>
+  </article>
 
-        
-          <div style="text-align:center;">
-            <a href="/2014/08/01/sqliteopenhelper-onupgrade-ondowngrade-handle/#more" class="more-link">阅读全文</a>
-          </div>
-                
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  
-  </div>
-</article>
-
-
-
-  
-
-  <nav id="pagination">
+</div>
+<nav id="pagination">
   
   
   <div class="clearfix"></div>
-</nav>
-</div></div>
+</nav></div></div>
       <aside id="sidebar" class="alignright">
   <div class="search">
   <form action="//google.com/search" method="get" accept-charset="utf-8">
@@ -135,7 +83,7 @@
   <h3 class="title">分类</h3>
   <ul class="entry">
   
-    <li><a href="/categories/android/">android</a><small>4</small></li>
+    <li><a href="/categories/android/">android</a><small>5</small></li>
   
   </ul>
 </div>
@@ -146,17 +94,19 @@
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/cc++/">c/c++</a><small>1</small></li>
+    <li><a href="/tags/cc++/">c/c++</a><small>2</small></li>
   
     <li><a href="/tags/java/">java</a><small>3</small></li>
   
     <li><a href="/tags/javascript/">javascript</a><small>1</small></li>
   
-    <li><a href="/tags/jni/">jni</a><small>1</small></li>
+    <li><a href="/tags/jni/">jni</a><small>2</small></li>
   
     <li><a href="/tags/sqlite/">sqlite</a><small>1</small></li>
   
     <li><a href="/tags/webview/">webview</a><small>2</small></li>
+  
+    <li><a href="/tags/库移植/">库移植</a><small>1</small></li>
   
     <li><a href="/tags/攻防安全/">攻防安全</a><small>1</small></li>
   

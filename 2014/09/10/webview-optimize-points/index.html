@@ -132,7 +132,7 @@
 }
 </pre></td></tr></table></figure>
 
-<p>从上面可以看出， 我们先使用loadDataWithBaseURL清除掉默认错误页内容，再让我们自定义的View得到显示（<strong>mErrorFrame</strong>为蒙在WebView之上的一个LinearLayout布局，默认为View.GONE）。</p>
+<p>从上面可以看出，我们先使用loadDataWithBaseURL清除掉默认错误页内容，再让我们自定义的View得到显示（<strong>mErrorFrame</strong>为蒙在WebView之上的一个LinearLayout布局，默认为View.GONE）。</p>
 <h3 id="3-是否存在滚动条">3.是否存在滚动条</h3>
 <p>当我们做类似上拉加载下一页这样的功能的时候，页面初始的时候需要知道当前WebView是否存在纵向滚动条，如果有则不加载下一页，如果没有则加载下一页直到其出现纵向滚动条。首先继承WebView类，在子类添加下面的代码：</p>
 <figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
@@ -239,9 +239,7 @@
 </ul>
 <h3 id="6-ViewPager里非首屏WebView点击事件不响应">6.ViewPager里非首屏WebView点击事件不响应</h3>
 <p>如果你的多个WebView是放在ViewPager里一个个加载出来的，那么就会遇到这样的问题。ViewPager首屏WebView的创建是在前台，点击时没有问题；而其他非首屏的WebView是在后台创建，滑动到它后点击页面会出现如下错误日志：</p>
-<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
-</pre></td><td class="code"><pre><span class="number">09</span>-<span class="number">11</span> <span class="number">11</span>:<span class="number">51</span>:<span class="number">46.105</span>  <span class="number">20955</span>-<span class="number">20968</span>/xx.xxx.xxx E/webcoreglue﹕ Should not happen: no rect-based-test nodes found
-</pre></td></tr></table></figure>
+<p class="log-error"><br>    20955-20968/xx.xxx.xxx E/webcoreglue﹕ Should not happen: no rect-based-test nodes found<br></p>
 
 <p>解决这个问题的办法是继承WebView类，在子类覆盖onTouchEvent方法，填入如下代码：</p>
 <figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
@@ -451,7 +449,7 @@
 </pre></td></tr></table></figure>
 
 <p>另外针对这种解决方案，页面端的JS脚本不用做任何变动。</p>
-<p><strong>转载请注明出处链接，谢谢！！！</strong></p>
+<p><strong>欢迎转载，请注明出处链接！！！</strong></p>
 
       
     </div>
@@ -504,7 +502,7 @@ var duoshuoQuery = {short_name:"pedant"};
   <h3 class="title">分类</h3>
   <ul class="entry">
   
-    <li><a href="/categories/android/">android</a><small>4</small></li>
+    <li><a href="/categories/android/">android</a><small>5</small></li>
   
   </ul>
 </div>
@@ -515,17 +513,19 @@ var duoshuoQuery = {short_name:"pedant"};
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/cc++/">c/c++</a><small>1</small></li>
+    <li><a href="/tags/cc++/">c/c++</a><small>2</small></li>
   
     <li><a href="/tags/java/">java</a><small>3</small></li>
   
     <li><a href="/tags/javascript/">javascript</a><small>1</small></li>
   
-    <li><a href="/tags/jni/">jni</a><small>1</small></li>
+    <li><a href="/tags/jni/">jni</a><small>2</small></li>
   
     <li><a href="/tags/sqlite/">sqlite</a><small>1</small></li>
   
     <li><a href="/tags/webview/">webview</a><small>2</small></li>
+  
+    <li><a href="/tags/库移植/">库移植</a><small>1</small></li>
   
     <li><a href="/tags/攻防安全/">攻防安全</a><small>1</small></li>
   
