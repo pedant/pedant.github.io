@@ -164,7 +164,7 @@
 
 <p>注：/d/opensrc/imgic-6.8.8为ImageMagick源码目录</p>
 <p>这里需要说明下<strong>为什么要将fftw以及下面的jpeg、png项目生成的目标文件用上面这两种方式安装？</strong>无论是安装到MinGW环境还是ImageMagick目录，目的都是在交叉编译ImageMagick时让configure程序让发现fftw、jpeg、png，以让ImageMagick生成的目标文件是支持它们的。否则ImageMagick test failed，我们在安卓JNI开发时ImageMagick静态库就无法使用这类图片格式或者功能。</p>
-<h4 id="4)-交叉编译JPEG">4).交叉编译JPEG</h4>
+<h4 id="4)-交叉编译libjpeg">4).交叉编译libjpeg</h4>
 <p>首先cd到jpeg源码目录下，configure项目。整个过程与fftw交叉编译类似。不同的是，如果安装到MinGW环境的话，不再需要设置环境变量了，因为fftw编译完成时已经设置过了（<strong>注意fftw、jpeg、png只能一起选择同一种安装方式，不能两个项目的安装到的位置不同</strong>）。如果安装到ImageMagick目录的话，把目录名fftw换成jpeg即可。详细如下：</p>
 <p>安装到MinGW环境：</p>
 <blockquote>
@@ -184,7 +184,7 @@
 </blockquote>
 
 
-<h4 id="5)-交叉编译PNG">5).交叉编译PNG</h4>
+<h4 id="5)-交叉编译libpng">5).交叉编译libpng</h4>
 <p>首先cd到png源码目录下，configure项目。整个过程<strong>同样</strong>与fftw交叉编译类似。如安装到ImageMagick目录，仅把目录名fftw换成png即可。</p>
 <h4 id="6)-交叉编译ImageMagick">6).交叉编译ImageMagick</h4>
 <p>有了上面这些准备工作，交叉编译ImageMagick就容易很多了。</p>
