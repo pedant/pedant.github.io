@@ -156,6 +156,13 @@ a:hover {
     margin-right: 0;
   }
 }
+.log-error {
+  color: #f00;
+  background: #eee;
+  padding: 20px;
+  line-height: 0px;
+  border: 1px solid #999;
+}
 #header {
   text-shadow: 0 0 1px #fff;
   text-align: center;
@@ -402,22 +409,45 @@ article .entry >table td {
   word-break: break-all;
 }
 article .entry blockquote {
-  background: #eee;
-  border: 1px solid #999;
-  padding: 0 24px 15px;
-  font-size: 0.9em;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-left: 4px solid #ddd;
+  padding: 0 0 15px 20px;
+  position: relative;
+}
+@media screen and (min-width: 769px) {
+  article .entry blockquote {
+    margin-left: 40px;
+  }
+}
+article .entry blockquote p {
+  text-indent: 0;
+  text-align: left;
+  font: 14px cursive;
+  line-height: 1.8;
+}
+article .entry blockquote:before {
+  content: '\f10d';
+  position: absolute;
+  left: -40px;
+  top: 20px;
+  font: 25px FontAwesome;
+  width: 25px;
+  height: 25px;
+  text-align: center;
+  color: #ddd;
 }
 article .entry blockquote footer {
-  border-top: none;
-  font-size: 0.8em;
-  line-height: 1;
-  margin: 20px 0 0;
-  padding-top: 0;
+  margin: 1em 0;
+  font-style: italic;
+  border: none;
 }
 article .entry blockquote footer cite:before {
   content: '—';
-  color: #ccc;
-  padding: 0 0.5em;
+  padding: 0 0.3em;
+}
+article .entry blockquote footer cite a {
+  color: #999;
 }
 article .entry code,
 article .entry pre {
@@ -650,13 +680,18 @@ article footer .addthis iframe {
   box-shadow: none;
 }
 .archive article .post-content {
+  border: none;
   padding: 10px 12px 10px 77px;
+  margin-top: 20px;
   margin-bottom: 4px;
 }
 @media screen and (max-width: 600px) {
   .archive article .post-content {
     padding-left: 20px;
   }
+}
+.archive article .post-content h1 {
+  font-size: 1.5em;
 }
 #sidebar {
   width: 270px;

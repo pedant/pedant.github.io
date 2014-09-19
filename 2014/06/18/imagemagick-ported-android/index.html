@@ -7,9 +7,9 @@
   <meta name="author" content="Yanyuetian">
   
   <meta name="description" content="ImageMagick是一个用来创建、编辑、合成图片的软件。它可以读取、转换、写入多种格式的图片。在移动平台做一些较复杂的图像处理时，难免会请出这尊大神。官方网站上也说明了它可以运行在多个平台之上，包括Android。不过官方的Releases版本只有Unix、Mac OS X、IOS、Windows，并有把针对Android各种架构发布现成的二进制包。不过好在它完全是开源的，我们完全可以下载源码然后自己交叉编译(Cross-Compile)出基于arm、x86、mips运行系统的静态链接库，这样就可以在目前的Android全平台下跑起来了。
-一般我们办公都在Windows平台，可是要用源码交叉编译(Source Cross-Compile)就得使用GNU环境，如果单独装一个linux虚拟机再来编译这个太过麻烦。我们可以在windows上使用MinGW工具来模拟一套GNU环境。">
+一般我们办公都在Windows平台，可是要用源码交叉编译(Source Cross-Compile)就得使用GNU环境，如果单独装一个linux虚拟机再来编译过程太过麻烦。我们可以在windows上使用MinGW工具来模拟一套GNU环境。">
   
-  <meta name="keywords" content="ImageMagick移植,Android移植,fftw移植,jpeg移植,libpng移植,交叉编译,Cross-Compile,NDK工具链">
+  <meta name="keywords" content="ImageMagick移植,Android移植,fftw移植,jpeg移植,libpng移植,交叉编译,ported-to-android,Cross-Compile,NDK工具链">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
   <meta property="og:title" content="Windows下将ImageMagick移植到Android平台"/>
@@ -78,10 +78,10 @@
     <div class="entry">
       
         <p>ImageMagick是一个用来创建、编辑、合成图片的软件。它可以读取、转换、写入多种格式的图片。在移动平台做一些较复杂的图像处理时，难免会请出这尊大神。<a href="http://www.imagemagick.org/index.php" target="_blank" rel="external">官方网站上</a>也说明了它可以运行在多个平台之上，包括Android。不过官方的Releases版本只有Unix、Mac OS X、IOS、Windows，并有把针对Android各种架构发布现成的二进制包。不过好在它完全是开源的，我们完全可以下载源码然后自己交叉编译(Cross-Compile)出基于arm、x86、mips运行系统的静态链接库，这样就可以在目前的Android全平台下跑起来了。</p>
-<p>一般我们办公都在Windows平台，可是要用源码交叉编译(Source Cross-Compile)就得使用GNU环境，如果单独装一个linux虚拟机再来编译这个太过麻烦。我们可以在windows上使用MinGW工具来模拟一套GNU环境。</p>
+<p>一般我们办公都在Windows平台，可是要用源码交叉编译(Source Cross-Compile)就得使用GNU环境，如果单独装一个linux虚拟机再来编译过程太过麻烦。我们可以在windows上使用MinGW工具来模拟一套GNU环境。</p>
 <a id="more"></a>
 
-<p>通常仅有ImageMagick源码是不够的，还需要一些依赖包（比如图像格式处理库）等。同时整个编译过程还需要你机子上有其他环境。总体上我使用了下面这些：</p>
+<p>另外仅编译ImageMagick是不够的，我们的程序在实际应用时通常会读入一些常见格式的图片(jpeg、png)，还可能需要做一些图形匹配及颜色分散统计(fftw)等。这样我们就需要编译另外一些项目，然后交给ImageMagick代理使用就可以了。故这里还需一些依赖包，同时整个编译过程还需要你机子上有其他环境。总体上我使用了下面这些：</p>
 <ul>
 <li>MinGW v0.6.2</li>
 <li>Android NDK(android-ndk-r9c)</li>
@@ -163,6 +163,7 @@
 
 
 <p>注：/d/opensrc/imgic-6.8.8为ImageMagick源码目录</p>
+<p>这里需要说明下<strong>为什么要将fftw以及下面的jpeg、png项目生成的目标文件用上面这两种方式安装？</strong>无论是安装到MinGW环境还是ImageMagick目录，目的都是在交叉编译ImageMagick时让configure程序让发现fftw、jpeg、png，以让ImageMagick生成的目标文件是支持它们的。否则ImageMagick test failed，我们在安卓JNI开发时ImageMagick静态库就无法使用这类图片格式或者功能。</p>
 <h4 id="4)-交叉编译JPEG">4).交叉编译JPEG</h4>
 <p>首先cd到jpeg源码目录下，configure项目。整个过程与fftw交叉编译类似。不同的是，如果安装到MinGW环境的话，不再需要设置环境变量了，因为fftw编译完成时已经设置过了（<strong>注意fftw、jpeg、png只能一起选择同一种安装方式，不能两个项目的安装到的位置不同</strong>）。如果安装到ImageMagick目录的话，把目录名fftw换成jpeg即可。详细如下：</p>
 <p>安装到MinGW环境：</p>
@@ -190,10 +191,11 @@
 <p>直接cd到ImageMagick源码目录，执行下面的命令：</p>
 <blockquote>
 
-<p>\$ ./configure —host=arm-linux-androideabi —prefix=/d/opensrc/imgic-out —disable-shared —enable-delegate-build —without-rsvg —disable-opencl —disable-largefile —without-perl —without-x —disable-openmp —without-bzlib —without-freetype</p>
+<p>\$ ./configure —host=arm-linux-androideabi —prefix=/d/opensrc/imgic-out —disable-shared —disable-opencl —disable-largefile —without-perl —without-x —disable-openmp —without-bzlib —without-freetype —without-rsvg —enable-delegate-build</p>
 </blockquote>
 
 
+<p>如果你上面将fftw、jpeg、png安装到ImageMagick目录的话，一定要打开 —enable-delegate-build 这个开关。</p>
 <p>这里我们关闭了一些用不到的开关，—prefix=/d/opensrc/imgic-out 将输出目录指定。敲进去之后，一杯咖啡的时间，你就会看到命令行生成了像下面这样的清单。</p>
 <p><img src="/images/imgic_conf_reslist.jpg" alt="image"></p>
 <p>看着fftw、jpeg、png、imagemagick++都是yes，也就可以安心地继续往下执行make了，又是一杯咖啡的时间，就可以make install了。于是我们的第一个基于arm移动平台的ImageMagick静态链接库集合就大功告成。</p>
@@ -211,7 +213,7 @@
 <li>把arm过程中所有命令出现的 arm-19-toolchain 替换成 <strong>mips-19-toolchain</strong></li>
 <li>把arm过程中所有命令出现的 —host=arm-linux-androideabi 替换成 <strong>—host=mipsel-linux-android</strong></li>
 </ul>
-<p>至此，Android平台所有指令集架构下的<strong>静态链接库集</strong>都交叉编译完成。这样我们就可以在JNI编码打包时将各静态库(.a文件)作为单独的MODULE引入使用了。</p>
+<p>至此，Android平台所有指令集架构下的<strong>静态链接库</strong>都交叉编译完成。这样我们就可以在JNI编码打包时将各静态库(.a文件)作为单独的MODULE引入使用了。</p>
 <p>最终生成的目标文件集合包我也都放在了云盘处 <a href="http://yunpan.cn/Q7UxIiMiaDyXG" target="_blank" rel="external">http://yunpan.cn/Q7UxIiMiaDyXG</a> （提取码：f297）。</p>
 <p><strong>欢迎转载，请注明出处链接！！！</strong></p>
 
