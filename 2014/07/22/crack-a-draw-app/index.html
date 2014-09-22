@@ -1,0 +1,377 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>一个抽奖应用的逆向破解全流程 | 书呆子精神院</title>
+  <meta name="author" content="Yanyuetian">
+  
+  <meta name="description" content="东窗事发
+偶然见到一个应用内有抽奖的活动（应用具体名称就不便告知），而且是每天都可以抽。同时抽奖之前也不需要用户登录什么的，但限定了用户一天（自然天）只能抽奖一次。那么应用的服务端在用户没有登录的情况下是依据什么来判定当前用户今天是否已抽过奖了呢？这当中判断的依据是否可靠，能否被伪造然后实现一天多次抽奖呢？带着这些问题，让我们来剥开应用的层层外纱。
+初识庐山
+首先在PC端打开LogCat，然后手机连接PC，最后手机上打开该应用的抽奖界面。这时我们在LogCat中发现了该应用输出的如下日志：">
+  
+  <meta name="keywords" content="Android逆向破解,DeviceID伪造,smali代码逆向,apk包逆向，js代码逆向,抽奖页面破解,加固apk应用,解开classes.dex">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="一个抽奖应用的逆向破解全流程"/>
+  <meta property="og:site_name" content="书呆子精神院"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+  
+  <link href="/favicon.ico" rel="icon" type="image/x-ico">
+  <link rel="canonical" href="http://www.pedant.cn/2014/07/22/crack-a-draw-app/" />
+  <link rel="alternate" href="/atom.xml" title="书呆子精神院" type="application/atom+xml">
+  
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="blog-header">
+  <h1><a href="/">书呆子精神院</a></h1>
+  <h2>一起发呆，一起发疯</h2>
+</div>
+<nav id="main-nav" class="blog-nav">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+      <li><a href="/about">关于</a></li>
+    
+    <li> <a href="/atom.xml">RSS</a> </li>
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    
+      <div id="main-col" class="alignleft"><div id="wrapper"><article class="android">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2014-07-22T06:01:36.000Z"><a href="/2014/07/22/crack-a-draw-app/">7月22 2014</a></time>
+      
+      
+  
+    <h1 class="title">一个抽奖应用的逆向破解全流程</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h3 id="东窗事发"><strong>东窗事发</strong></h3>
+<p>偶然见到一个应用内有抽奖的活动（应用具体名称就不便告知），而且是每天都可以抽。同时抽奖之前也不需要用户登录什么的，但限定了用户一天（自然天）只能抽奖一次。那么应用的服务端在用户没有登录的情况下是依据什么来判定当前用户今天是否已抽过奖了呢？这当中判断的依据是否可靠，能否被伪造然后实现一天多次抽奖呢？带着这些问题，让我们来剥开应用的层层外纱。</p>
+<h3 id="初识庐山"><strong>初识庐山</strong></h3>
+<p>首先在PC端打开LogCat，然后手机连接PC，最后手机上打开该应用的抽奖界面。这时我们在LogCat中发现了该应用输出的如下日志：</p>
+<a id="more"></a>
+
+<p><img src="/images/draw_page_url_log.jpg" alt="image"></p>
+<p>里面有onPageStart并且包含了被加载网页的url。由此可以得出结论，抽奖页是用WebView加载网页实现的。那加载这个WebView的Activity又是什么呢？</p>
+<p>在PC端打开Android DDMS,在进程列表中找到该应用包对应的进程（如下图的进程ID为21641），然后查看Activity Manager State。</p>
+<p><img src="/images/draw_ddms_step.jpg" alt="image"></p>
+<p>这时我们得到的Activity Stack就像这样。</p>
+<p><img src="/images/draw_activity_stack.jpg" alt="image"></p>
+<p>由此我们就可以大概知道它Java内部的实现结构是怎样的了。首先创建的是ActivityToolsExplorer，然后在其中嵌入了一个名为FragmentToolsExplorer的Fragment，最后由FragmentToolsExplorer在onCreate里实现WebView加载网页的过程。</p>
+<h3 id="顺水推舟"><strong>顺水推舟</strong></h3>
+<p>由上面我们知道了抽奖页的Url。好了，我们首先在浏览器上打开这个Url，看看它的抽奖是怎样一步步实现的。</p>
+<p>这个页面打开后，在页面正中间有一个用来作抽奖操作的按钮，嵌套样式名为.lucky-btn .lucky-cell-conn。当然在浏览器上这个程序是运行不起来的，我们关心的只是开始抽奖这个动作是怎样发起的。查看源码打开main.js。js文件竟然没有压缩，就更方便我们逆向跟踪了。我们找到对这个按钮绑定点击事件的位置：</p>
+<figure class="highlight JAVASCRIPT"><figcaption><span>main.js</span></figcaption><table><tr><td class="gutter"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+</pre></td><td class="code"><pre><span class="function"><span class="keyword">function</span> <span class="title">init</span><span class="params">(info)</span> {</span>
+    ...
+    <span class="keyword">var</span> deviceID=info.deviceId;
+    checkDrawEnable(drawingObject,deviceID);
+    $(<span class="string">".lucky-btn .lucky-cell-conn"</span>).on(<span class="string">"click"</span>,<span class="function"><span class="keyword">function</span><span class="params">(e)</span>{</span>
+        ...
+        window.setTimeout(<span class="function"><span class="keyword">function</span><span class="params">()</span>{</span>
+            ..
+            getJSONP(BASE_URL+<span class="string">"draw/"</span>+deviceID,<span class="function"><span class="keyword">function</span><span class="params">(data)</span>{</span>
+                drawResult(drawingObject,data);
+            });
+        },<span class="built_in">Math</span>.random()*<span class="number">1000</span>+<span class="number">1000</span>);
+    });
+
+}
+</pre></td></tr></table></figure>
+
+<p>ok，在这里我们就直接发现了，服务端用来判断用户当天已抽奖的依据是<strong>DeviceId（设备ID）</strong>。现在我们需要的是一步步逆向跟踪，找到是谁调用了init函数并带入的info参数是怎样构成的，这样似乎整个程序逻辑就会变得清晰起来。</p>
+<p>这个网页中bridge对象为java层注入的对象，而脚本中一些初始化信息也是通过调用java方法获得的。那么我们要跟踪整个代码流程，就必须对java代码也进行逆向分析。首先拿到应用的apk包，unzip后使用baksmali将classes.dex解为smali代码包。结合脚本代码，对代码调用层次一步步追踪，这个过程需要你对smali代码也比较熟悉。最后得到如下图所示的调用流程图（具体追踪过程就不在这展开）：</p>
+<p><img src="/images/draw_code_reverse.jpg" alt="image"></p>
+<p>由此，我们就知道deviceId串是主要就由<strong>Lcom/xx/util/e;-&gt;a(Landroid/content/Context;)Ljava/lang/String;</strong>方法负责生成。这个方法中获取到AndroidID与DeviceId后用”_”符连接。</p>
+<p>而<strong>Lcom/xx/util/e;-&gt;j(Landroid/content/Context;)Ljava/lang/String;</strong>就是获取DeviceId的方法，具体的smali代码为：</p>
+<figure class="highlight JAVA"><figcaption><span>Lcom/xx/util/e;->j(Landroid/content/Context;)Ljava/lang/String;</span></figcaption><table><tr><td class="gutter"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+</pre></td><td class="code"><pre>.method <span class="keyword">public</span> <span class="keyword">static</span> <span class="title">j</span>(Landroid/content/Context;)Ljava/lang/String;
+    .registers <span class="number">2</span>
+
+    <span class="keyword">const</span>-string v0, <span class="string">"phone"</span>
+
+    invoke-virtual {p0, v0}, Landroid/content/Context;-&gt;getSystemService(Ljava/lang/String;)Ljava/lang/Object;
+
+    move-result-object v0
+
+    check-cast v0, Landroid/telephony/TelephonyManager;
+
+    invoke-virtual {v0}, Landroid/telephony/TelephonyManager;-&gt;getDeviceId()Ljava/lang/String;
+
+    move-result-object v0
+
+    <span class="keyword">return</span>-object v0
+.end method
+</pre></td></tr></table></figure>
+
+<p>至此找到获取DeviceId真正的位置，我们就<strong>破案</strong>了。</p>
+<h3 id="偷梁换柱"><strong>偷梁换柱</strong></h3>
+<p>上面我们知道了，服务端用来判断用户当天已抽奖的依据是DeviceId，同时我们也追踪到了代码中获取DeviceId具体位置。这样，程序每次获取DeviceId时我们就可以<strong>伪造返回值</strong>（每次伪造的结果都不能相同），就实现一天无限次抽奖了。那怎样伪造这样的返回值呢，下面的简单一句Java代码就可以实现了。</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
+</pre></td><td class="code"><pre><span class="keyword">return</span> String.valueOf(System.currentTimeMillis() ^ <span class="number">537400335373457</span>L);
+</pre></td></tr></table></figure>
+
+<p>把上面这句翻译成smali代码后，替换掉j(Landroid/content/Context;)Ljava/lang/String;方法内原来的全部smali代码，偷梁换柱。</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+</pre></td><td class="code"><pre>.registers <span class="number">9</span>
+
+invoke-<span class="keyword">static</span> {}, Ljava/lang/System;-&gt;currentTimeMillis()J
+
+move-result-wide v0
+
+<span class="keyword">const</span>-wide v2, <span class="number">0x1e8c344179491</span>L
+
+xor-<span class="keyword">long</span>/<span class="number">2</span>addr v0, v2
+
+invoke-<span class="keyword">static</span> {v0, v1}, Ljava/lang/String;-&gt;valueOf(J)Ljava/lang/String;
+
+move-result-object v0
+
+<span class="keyword">return</span>-object v0
+</pre></td></tr></table></figure>
+
+<p>最后用smali.jar打包回去，签名后安装。运行起来后应用在抽奖页面已经没有了次数限制。</p>
+<h3 id="魔高一尺，道高一丈"><strong>魔高一尺，道高一丈</strong></h3>
+<p>学习破解的目的不是为了走更多的捷径。有个道理大家都知道，最好的防守就是进攻。我们只有了解怎样去破解一个应用，才知道应该如何去加固自己的应用。就比如这个应用中，有下面这些问题可以改进来加大各方面破解的难度：</p>
+<ul>
+<li>Debug日志不应该存在于发布版本，Error日志也尽量少暴露敏感信息。</li>
+<li>线上网页的脚本代码及样式应该压缩，压缩后可以增加逆向时阅读及追踪上的难度。</li>
+<li>不能以客户端上任何固有参数作为服务端上的关键凭据，比如这里的抽奖凭据依赖了客户端的DeviceID。</li>
+<li>Java代码混淆还是需要的，虽然代码仍可以被一步步逆向跟踪，但语义上的隔离会加大追踪的时间成本。<br><br><font color="blue">上面内容如有侵权，请告知便作以删除！</font>
+
+</li>
+</ul>
+<p><strong>欢迎转载，请注明出处链接！！！</strong></p>
+
+      
+    </div>
+  
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/android/">android</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  
+  </div>
+</article>
+
+
+<section id="comment">
+<!-- Duoshuo Comment BEGIN -->
+	<div class="ds-thread"></div>
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"pedant"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = 'http://static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		|| document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+</script>
+<!-- Duoshuo Comment END -->
+</section>
+
+</div></div>
+      <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:www.pedant.cn">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/android/">android</a><small>6</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/cc++/">c/c++</a><small>2</small></li>
+  
+    <li><a href="/tags/java/">java</a><small>4</small></li>
+  
+    <li><a href="/tags/javascript/">javascript</a><small>1</small></li>
+  
+    <li><a href="/tags/jni/">jni</a><small>2</small></li>
+  
+    <li><a href="/tags/sqlite/">sqlite</a><small>1</small></li>
+  
+    <li><a href="/tags/webview/">webview</a><small>2</small></li>
+  
+    <li><a href="/tags/库移植/">库移植</a><small>1</small></li>
+  
+    <li><a href="/tags/攻防安全/">攻防安全</a><small>2</small></li>
+  
+  </ul>
+</div>
+
+
+  <div class="widget tag">
+<h3 class="title">友情链接</h3>
+<ul class="entry">
+    <li><a href="http://blog.csdn.net/Luoshengyang/" title="老罗的Android之旅">老罗的Android之旅</a></li>
+    <li><a href="http://winterland.me/" title="冬的实验室">冬的实验室</a></li>
+    <li><a href="http://blog.codingnow.com/" title="云风的BLOG">云风的BLOG</a></li>
+</ul>
+</div>
+
+</aside>
+    
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="aligncenter">
+  
+  &copy; 2014 Yanyuetian
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="http://cdn.staticfile.org/jquery/2.1.1-rc2/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+
+<script type="text/javascript">
+    var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+    document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F3bf6ccabac425846443702b3673e9f8a' type='text/javascript'%3E%3C/script%3E"));
+</script>
+
+
+
+<div id="scroll2top">
+<img src="/scroll2top/arrow.png"/>
+</div>
+<script src="/scroll2top/scroll2top.js"></script>
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script src="https://www.zybuluo.com/static/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  <!-- Baidu Button BEGIN -->
+<script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"1","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"1","bdPos":"left","bdTop":"250"}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+ <!-- Baidu Button END -->
+
+
+
+
+
+</body>
+</html>
