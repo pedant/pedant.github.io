@@ -1,0 +1,409 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>完美解决WebView与上层父元素的TouchMove事件冲突 | 书呆子精神院</title>
+  <meta name="author" content="Yanyuetian">
+  
+  <meta name="description" content="在开发过程中你可能会遇到这样一种情况。端里面使用ViewPager嵌套了多个WebView页面，同时某一个WebView中的页面元素需要响应TouchMove事件。正如下图所示的情景：">
+  
+  
+  <meta name="keywords" content="WebView TouchEvent,TouchMove事件冲突,ViewPager嵌套WebView,ViewPager Touch事件冲突,onInterceptTouchEvent,requestDisallowInterceptTouchEvent">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta property="og:title" content="完美解决WebView与上层父元素的TouchMove事件冲突"/>
+  <meta property="og:site_name" content="书呆子精神院"/>
+  
+  <meta property="og:image" content="undefined"/>
+  
+  <link href="/favicon.ico" rel="icon" type="image/x-ico">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="blog-header">
+  <h1><a href="/">书呆子精神院</a></h1>
+  <h2>一起发呆，一起发疯</h2>
+</div>
+<nav id="main-nav" class="blog-nav">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+      <li><a href="/about">关于</a></li>
+    
+    <li> <a href="/atom.xml">RSS</a> </li>
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    
+      <div id="main-col" class="alignleft"><div id="wrapper"><article class="android">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2014-09-23T07:18:57.000Z"><a href="/2014/09/23/webview-touch-conflict/">9月23 2014</a></time>
+      
+      
+  
+    <h1 class="title">完美解决WebView与上层父元素的TouchMove事件冲突</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在开发过程中你可能会遇到这样一种情况。端里面使用ViewPager嵌套了多个WebView页面，同时某一个WebView中的页面元素需要响应TouchMove事件。正如下图所示的情景：</p>
+<p><img src="/images/webparent_touch_conflict.jpg" alt="image"></p>
+<a id="more"></a>
+
+<p>这时你就会发现上层（ViewPager）阻断了下层（WebView）接收TouchMove事件，即使你的WebView在TouchDown时返回true也无效，因为上层直接使用了onInterceptTouchEvent对后续的TouchMove进行了拦截。针对这个问题的解决，<strong>简单做法</strong>是在重写WebView onTouchEvent方法，如下：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+</pre></td><td class="code"><pre><span class="annotation">@Override</span>
+<span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onTouchEvent</span>(MotionEvent ev) {
+    <span class="keyword">boolean</span> ret = <span class="keyword">super</span>.onTouchEvent(ev);
+    <span class="keyword">if</span> (mPreventParentTouch) {
+        <span class="keyword">switch</span> (ev.getAction()) {
+            <span class="keyword">case</span> MotionEvent.ACTION_MOVE:
+                requestDisallowInterceptTouchEvent(<span class="keyword">true</span>);
+                ret = <span class="keyword">true</span>;
+                <span class="keyword">break</span>;
+            <span class="keyword">case</span> MotionEvent.ACTION_UP:
+            <span class="keyword">case</span> MotionEvent.ACTION_CANCEL:
+                requestDisallowInterceptTouchEvent(<span class="keyword">false</span>);
+                mPreventParentTouch = <span class="keyword">false</span>;
+                <span class="keyword">break</span>;
+        }
+    }
+    <span class="keyword">return</span> ret;
+}
+
+<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">preventParentTouchEvent</span> () {
+    mPreventParentTouch = <span class="keyword">true</span>;
+}
+</pre></td></tr></table></figure>
+
+<p>代码控制的关键在于mPreventParentTouch这个变量，mPreventParentTouch默认为false，当用户touchdown页面元素时通知该WebView将mPreventParentTouch设置为true。示意代码如下：</p>
+<figure class="highlight JAVASCRIPT"><table><tr><td class="gutter"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+</pre></td><td class="code"><pre>&lt;script type=<span class="string">"text/javascript"</span>&gt;
+    document.getElementById(<span class="string">"targetEle"</span>).addEventListener(<span class="string">"touchstart"</span>,
+        <span class="function"><span class="keyword">function</span><span class="params">(ev)</span> {</span>
+            HostApp.preventParentTouchEvent();   <span class="comment">// 通知WebView阻止祖先对其Touch事件的拦截</span>
+        }
+    );
+    document.getElementById(<span class="string">"targetEle"</span>).addEventListener(<span class="string">"touchmove"</span>,
+        <span class="function"><span class="keyword">function</span><span class="params">(ev)</span> {</span>
+            <span class="comment">// todo something on this page</span>
+        }
+    );
+<span class="xml"><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span>
+</pre></td></tr></table></figure>
+
+<p>关于web页面如何通知WebView(即调用Java方法)请参看<a href="/2014/09/10/webview-optimize-points#8-避免addJavaScriptInterface带来的安全问题">Android WebView开发问题及优化汇总第8条</a>。</p>
+<p>刚提到了上面是一种简单的做法，并不能很好的解决手指滑动过快带来的误操作问题，即当用户快速地滑动时，还是有一定机率会出现ViewPager拦截TouchMove事件而发生了Tab切换而非页面元素做出了响应。要<strong>完美解决</strong>此问题，就要用到<strong>稍微复杂</strong>一点的方法（仅是整体消息传递流程复杂一点）。</p>
+<p>首先假设在ViewPager之上还有一个父元素叫做ParentViewOnViewPager，当我们接收到页面preventParentTouchEvent通知时就先于ViewPager而进行拦截。如下：</p>
+<figure class="highlight JAVA"><figcaption><span>ParentViewOnViewPager.java</span></figcaption><table><tr><td class="gutter"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+</pre></td><td class="code"><pre><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ParentViewOnViewPager</span> <span class="keyword">extends</span> <span class="title">FrameLayout</span> {</span>
+    <span class="keyword">private</span> MineWebView mDispatchWebView;
+
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">preventParentTouchEvent</span> (WebView view) {
+        mDispatchWebView = (MineWebView)view;
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onInterceptTouchEvent</span>(MotionEvent ev) {
+        <span class="keyword">if</span> (ev.getAction() == MotionEvent.ACTION_MOVE && mDispatchWebView != <span class="keyword">null</span>) {
+            mDispatchWebView.ignoreTouchCancel(<span class="keyword">true</span>);
+            <span class="keyword">return</span> <span class="keyword">true</span>;
+        }
+        <span class="keyword">return</span> <span class="keyword">false</span>;
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onTouchEvent</span>(MotionEvent ev) {
+        <span class="keyword">if</span> (mDispatchWebView != <span class="keyword">null</span>){
+            <span class="keyword">switch</span> (ev.getAction()) {
+                <span class="keyword">case</span> MotionEvent.ACTION_MOVE:
+                    mDispatchWebView.onTouchEvent(ev);
+                    <span class="keyword">break</span>;
+                <span class="keyword">default</span>:
+                    mDispatchWebView.ignoreTouchCancel(<span class="keyword">false</span>);
+                    mDispatchWebView.onTouchEvent(ev);
+                    mDispatchWebView = <span class="keyword">null</span>;
+                    <span class="keyword">break</span>;
+            }
+            <span class="keyword">return</span> <span class="keyword">true</span>;
+        }
+        <span class="keyword">return</span> <span class="keyword">super</span>.onTouchEvent(ev);
+    }
+}
+</pre></td></tr></table></figure>
+
+<p>即当ParentViewOnViewPager接收到通知时，发起TouchEvent拦截，将拦截到的Touch事件<strong>转嫁到</strong>装载页面的mDispatchWebView进行事件派发。这样就直接跳过了ViewPager这一层。这里需要注意的是<strong>当ParentViewOnViewPager发起拦截时，WebView会接收到一个TouchCancel事件，WebView应该忽略这个事件，以避免页面接收到这个事件而打断整个处理流程</strong>。如下代码所示：</p>
+<figure class="highlight JAVA"><figcaption><span>MineWebView.java</span></figcaption><table><tr><td class="gutter"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+</pre></td><td class="code"><pre><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MineWebView</span> <span class="keyword">extends</span> <span class="title">WebView</span> {</span>
+    <span class="keyword">boolean</span> mIgnoreTouchCancel;
+
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">ignoreTouchCancel</span> (<span class="keyword">boolean</span> val) {
+        mIgnoreTouchCancel = val;
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onTouchEvent</span>(MotionEvent ev) {
+        <span class="keyword">return</span> ev.getAction() == MotionEvent.ACTION_CANCEL && mIgnoreTouchCancel || <span class="keyword">super</span>.onTouchEvent(ev);
+    }
+}
+</pre></td></tr></table></figure>
+
+<p>另外针对这种解决方案，页面端的JS脚本不用做任何变动。</p>
+<p><strong>欢迎转载，请注明出处链接！！！</strong></p>
+
+      
+    </div>
+  
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/android/">android</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  
+  </div>
+</article>
+
+
+<section id="comment">
+<!-- Duoshuo Comment BEGIN -->
+	<div class="ds-thread"></div>
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"pedant"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = 'http://static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		|| document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+</script>
+<!-- Duoshuo Comment END -->
+</section>
+
+</div></div>
+      <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:www.pedant.cn">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/android/">android</a><small>7</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/cc++/">c/c++</a><small>2</small></li>
+  
+    <li><a href="/tags/java/">java</a><small>5</small></li>
+  
+    <li><a href="/tags/javascript/">javascript</a><small>1</small></li>
+  
+    <li><a href="/tags/jni/">jni</a><small>2</small></li>
+  
+    <li><a href="/tags/sqlite/">sqlite</a><small>1</small></li>
+  
+    <li><a href="/tags/webview/">webview</a><small>3</small></li>
+  
+    <li><a href="/tags/库移植/">库移植</a><small>1</small></li>
+  
+    <li><a href="/tags/攻防安全/">攻防安全</a><small>2</small></li>
+  
+  </ul>
+</div>
+
+
+  <div class="widget tag">
+<h3 class="title">友情链接</h3>
+<ul class="entry">
+    <li><a href="http://blog.csdn.net/Luoshengyang/" title="老罗的Android之旅">老罗的Android之旅</a></li>
+    <li><a href="http://winterland.me/" title="冬的实验室">冬的实验室</a></li>
+    <li><a href="http://blog.codingnow.com/" title="云风的BLOG">云风的BLOG</a></li>
+</ul>
+</div>
+
+</aside>
+    
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="aligncenter">
+  
+  &copy; 2014 Yanyuetian
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="http://cdn.staticfile.org/jquery/2.1.1-rc2/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+
+<script type="text/javascript">
+    var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+    document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F3bf6ccabac425846443702b3673e9f8a' type='text/javascript'%3E%3C/script%3E"));
+</script>
+
+
+
+<div id="scroll2top">
+<img src="/scroll2top/arrow.png"/>
+</div>
+<script src="/scroll2top/scroll2top.js"></script>
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script src="https://www.zybuluo.com/static/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  <!-- Baidu Button BEGIN -->
+<script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"1","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"1","bdPos":"left","bdTop":"250"}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+ <!-- Baidu Button END -->
+
+
+
+
+
+</body>
+</html>
