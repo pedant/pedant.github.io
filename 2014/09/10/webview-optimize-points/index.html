@@ -230,7 +230,9 @@
 <ul>
 <li>从网络上下载html的过程应放在<strong>工作线程</strong>中</li>
 <li>html下载成功后渲染出html的步骤应放在<strong>UI主线程</strong>，不然WebView会报错</li>
-<li>html下载失败则可以使用我们前面讲述的方法来显示自定义错误界面</li>
+<li>html下载失败则可以使用我们前面讲述的方法来显示自定义错误界面<br><br><font color="blue">完整的demo项目代码我已放到：<a href="http://yunpan.cn/cgQPvJQxxkCBj" target="_blank" rel="external">http://yunpan.cn/cgQPvJQxxkCBj</a> （提取码：6712）。</font>
+
+</li>
 </ul>
 <h3 id="6-ViewPager里非首屏WebView点击事件不响应">6.ViewPager里非首屏WebView点击事件不响应</h3>
 <p>如果你的多个WebView是放在ViewPager里一个个加载出来的，那么就会遇到这样的问题。ViewPager首屏WebView的创建是在前台，点击时没有问题；而其他非首屏的WebView是在后台创建，滑动到它后点击页面会出现如下错误日志：</p>
