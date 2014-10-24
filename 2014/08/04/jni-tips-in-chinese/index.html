@@ -1,3 +1,4 @@
+
 <!DOCTYPE HTML>
 <html>
 <head>
@@ -29,7 +30,7 @@ JNI全称Java Native Interface。它为托管代码（使用Java编程语言编�
 
 
 <body>
-  <header id="header" class="inner"><div class="blog-header">
+<header id="header" class="inner"><div class="blog-header">
   <h1><a href="/">书呆子精神院</a></h1>
   <h2>一起发呆，一起发疯</h2>
 </div>
@@ -46,9 +47,9 @@ JNI全称Java Native Interface。它为托管代码（使用Java编程语言编�
   <div class="clearfix"></div>
 </nav>
 <div class="clearfix"></div></header>
-  <div id="content" class="inner">
+<div id="content" class="inner">
     
-      <div id="main-col" class="alignleft"><div id="wrapper"><article class="android">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="android">
   
     <div class="gallery">
   <div class="photoset">
@@ -105,27 +106,7 @@ JNI全称Java Native Interface。它为托管代码（使用Java编程语言编�
 <p>如果性能是你看重的，那么一旦查找出这些值之后在你的本地代码中缓存这些结果是非常有用的。因为每个进程当中的JavaVM是存在限制的，存储这些数据到本地静态数据结构中是非常合理的。</p>
 <p>类引用（class reference），字段ID（field ID）以及方法ID（method ID）在类被卸载前都是有效的。如果与一个类加载器（ClassLoader）相关的所有类都能够被垃圾回收，但是这种情况在安卓上是罕见甚至不可能出现，只有这时类才被卸载。注意虽然jclass是一个类引用，但是<strong>必须要调用NewGlobalRef保护起来</strong>（见下个章节）。</p>
 <p>当一个类被加载时如果你想缓存些ID，而后当这个类被卸载后再次载入时能够自动地更新这些缓存ID，正确做法是在对应的类中添加一段像下面的代码来初始化这些ID：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre>1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-</pre></td><td class="code"><pre><span class="comment">/*
- * 我们在一个类初始化时调用本地方法来缓存一些字段的偏移信息
- * 这个本地方法查找并缓存你感兴趣的class/field/method ID
- * 失败时抛出异常
- */</span>
-<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">native</span> <span class="keyword">void</span> <span class="title">nativeInit</span>();
-
-<span class="keyword">static</span> {
-    nativeInit();
-}
-</pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/*</span></div><div class="line"> * 我们在一个类初始化时调用本地方法来缓存一些字段的偏移信息</div><div class="line"> * 这个本地方法查找并缓存你感兴趣的class/field/method ID</div><div class="line"> * 失败时抛出异常</div><div class="line"> */</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">native</span> <span class="keyword">void</span> <span class="title">nativeInit</span>();</div><div class="line"></div><div class="line"><span class="keyword">static</span> {</div><div class="line">    nativeInit();</div><div class="line">}</div></pre></td></tr></table></figure>
 
 <p>在你的C/C++代码中创建一个nativeClassInit方法以完成ID查找的工作。当这个类被初始化时这段代码将会执行一次。当这个类被卸载后而后再次载入时，这段代码将会再次执行。</p>
 <h1 id="局部和全局引用">局部和全局引用</h1>
@@ -133,11 +114,7 @@ JNI全称Java Native Interface。它为托管代码（使用Java编程语言编�
 <p>这同样适用于所有jobject的子类，包括jclass，jstring，以及jarray（当JNI扩展检查是打开的时候，运行时会警告你对大部分对象引用的误用）。</p>
 <p>如果你想持有一个引用更长的时间，你就必须使用一个全局（“global”）引用了。NewGlobalRef函数以一个局部引用作为参数并且返回一个全局引用。全局引用能够保证在你调用DeleteGlobalRef前都是有效的。</p>
 <p>这种模式通常被用在缓存一个从FindClass返回的jclass对象的时候，例如：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre>1
-2
-</pre></td><td class="code"><pre>jclass localClass = env-&gt;FindClass(<span class="string">"MyClass"</span>);
-jclass globalClass = reinterpret_cast&lt;jclass&gt;(env-&gt;NewGlobalRef(localClass));
-</pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">jclass localClass = env-&gt;FindClass(<span class="string">"MyClass"</span>);</div><div class="line">jclass globalClass = reinterpret_cast&lt;jclass&gt;(env-&gt;NewGlobalRef(localClass));</div></pre></td></tr></table></figure>
 
 <p>所有的JNI方法都接收局部引用和全局引用作为参数。相同对象的引用却可能具有不同的值。例如，用相同对象连续地调用NewGlobalRef得到返回值可能是不同的。<strong>为了检查两个引用是否指向的是同一个对象，你必须使用IsSameObject函数</strong>。绝不要在本地代码中用==符号来比较两个引用。</p>
 <p>得出的结论就是你<strong>绝不要在本地代码中假定对象的引用是常量或者是唯一的</strong>。代表一个对象的32位值从方法的一次调用到下一次调用可能有不同的值。在连续的调用过程中两个不同的对象却可能拥有相同的32位值。不要使用jobject的值作为key.</p>
@@ -176,23 +153,11 @@ jclass globalClass = reinterpret_cast&lt;jclass&gt;(env-&gt;NewGlobalRef(localCl
 <p>另外注意JNI_COMMIT标识<strong>没有</strong>释放数组，你最终需要使用一个不同的标识再次调用Release。</p>
 <h1 id="区间数组">区间数组</h1>
 <p>当你想做的只是拷出或者拷进数据时，可以选择调用像Get<type>ArrayElements和GetStringChars这类非常有用的函数。想想下面：</type></p>
-<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
-2
-3
-4
-5
-</pre></td><td class="code"><pre>jbyte* data = env-&gt;GetByteArrayElements(array, NULL);
-<span class="keyword">if</span> (data != NULL) {
-    memcpy(buffer, data, len);
-    env-&gt;ReleaseByteArrayElements(array, data, JNI_ABORT);
-}
-</pre></td></tr></table></figure>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">jbyte* data = env-&gt;GetByteArrayElements(array, NULL);</div><div class="line"><span class="keyword">if</span> (data != NULL) {</div><div class="line">    memcpy(buffer, data, len);</div><div class="line">    env-&gt;ReleaseByteArrayElements(array, data, JNI_ABORT);</div><div class="line">}</div></pre></td></tr></table></figure>
 
 <p>这里获取到了数组，从当中拷贝出开头的len个字节元素，然后释放这个数组。根据代码的实现，Get函数将会牵制或者拷贝数组的内容。上面的代码拷贝了数据（为了可能的第二次），然后调用Release；这当中JNI_ABORT确保不存在第三份拷贝了。</p>
 <p>另一种更简单的实现方式：</p>
-<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
-</pre></td><td class="code"><pre>env-&gt;GetByteArrayRegion(array, <span class="number">0</span>, len, buffer);
-</pre></td></tr></table></figure>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">env-&gt;GetByteArrayRegion(array, <span class="number">0</span>, len, buffer);</div></pre></td></tr></table></figure>
 
 <p>这种方式有几个优点：</p>
 <ul>
@@ -247,28 +212,16 @@ jclass globalClass = reinterpret_cast&lt;jclass&gt;(env-&gt;NewGlobalRef(localCl
 <p>有几种方法去启用CheckJNI。</p>
 <p>如果你正在使用模拟器，CheckJNI默认是打开的。</p>
 <p>如果你有一台root过的设备，你可以使用下面的命令序列来重启运行时（runtime），启用CheckJNI。</p>
-<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
-2
-3
-</pre></td><td class="code"><pre>adb shell stop
-adb shell setprop dalvik.vm.checkjni <span class="keyword">true</span>
-adb shell start
-</pre></td></tr></table></figure>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">adb shell stop</div><div class="line">adb shell setprop dalvik.vm.checkjni <span class="keyword">true</span></div><div class="line">adb shell start</div></pre></td></tr></table></figure>
 
 <p>随便哪一种，当运行时（runtime）启动时你将会在你的日志输出中见到如下的字符：</p>
-<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
-</pre></td><td class="code"><pre>D AndroidRuntime: CheckJNI is ON
-</pre></td></tr></table></figure>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">D AndroidRuntime: CheckJNI is ON</div></pre></td></tr></table></figure>
 
 <p>如果你有一台常规的设备，你可以使用下面的命令：</p>
-<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
-</pre></td><td class="code"><pre>adb shell setprop debug.checkjni <span class="number">1</span>
-</pre></td></tr></table></figure>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">adb shell setprop debug.checkjni <span class="number">1</span></div></pre></td></tr></table></figure>
 
 <p>这将不会影响已经在运行的app，但是从那以后启动的任何app都将打开CheckJNI(改变属性为其它值或者只是重启都将会再次关闭CheckJNI)。这种情况下，你将会在下一次app启动时，在日志输出中看到如下字符：</p>
-<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
-</pre></td><td class="code"><pre>D Late-enabling CheckJNI
-</pre></td></tr></table></figure>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">D Late-enabling CheckJNI</div></pre></td></tr></table></figure>
 
 <h1 id="本地库">本地库</h1>
 <p>你可以使用标准的System.loadLibrary方法来从共享库中加载本地代码。在你的本地代码中较好的做法是：</p>
@@ -278,31 +231,7 @@ adb shell start
 <li>在JNI_OnLoad中，注册所有你的本地方法。你应该声明方法为“静态的（static）”因此名称不会占据设备上符号表的空间。</li>
 </ul>
 <p>JNI_OnLoad函数在C++中的写法如下：</p>
-<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-</pre></td><td class="code"><pre>jint JNI_OnLoad(JavaVM* vm, <span class="keyword">void</span>* reserved)
-{
-    JNIEnv* env;
-    <span class="keyword">if</span> (vm-&gt;GetEnv(reinterpret_cast&lt;<span class="keyword">void</span>**&gt;(&env), JNI_VERSION_1_6) != JNI_OK) {
-        <span class="keyword">return</span> -<span class="number">1</span>;
-    }
-
-    <span class="comment">// 使用env-&gt;FindClass得到jclass</span>
-    <span class="comment">// 使用env-&gt;RegisterNatives注册本地方法</span>
-
-    <span class="keyword">return</span> JNI_VERSION_1_6;
-}
-</pre></td></tr></table></figure>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">jint JNI_OnLoad(JavaVM* vm, <span class="keyword">void</span>* reserved)</div><div class="line">{</div><div class="line">    JNIEnv* env;</div><div class="line">    <span class="keyword">if</span> (vm-&gt;GetEnv(reinterpret_cast&lt;<span class="keyword">void</span>**&gt;(&env), JNI_VERSION_1_6) != JNI_OK) {</div><div class="line">        <span class="keyword">return</span> -<span class="number">1</span>;</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="comment">// 使用env-&gt;FindClass得到jclass</span></div><div class="line">    <span class="comment">// 使用env-&gt;RegisterNatives注册本地方法</span></div><div class="line"></div><div class="line">    <span class="keyword">return</span> JNI_VERSION_1_6;</div><div class="line">}</div></pre></td></tr></table></figure>
 
 <p>你也可以使用共享库的全路径来调用System.load。对于Android app，你也许会发现从context对象中得到应用私有数据存储的全路径是非常有用的。</p>
 <p>上面是推荐的方式，但不是仅有的实现方式。显式注册不是必须的，提供一个JNI_OnLoad函数也不是必须的。你可以使用基于特殊命名的“发现（discovery）”模式来注册本地方法（更多细节见：<a href="http://java.sun.com/javase/6/docs/technotes/guides/jni/spec/design.html#wp615" target="_blank" rel="external">JNI spec</a>），虽然这并不可取。因为如果一个方法的签名错误，在这个方法实际第一次被调用之前你是不会知道的。</p>
@@ -324,9 +253,7 @@ adb shell start
 </ul>
 <h1 id="FAQ:_为什么出现了UnsatisfiedLinkError?">FAQ: 为什么出现了UnsatisfiedLinkError?</h1>
 <p>当使用本地代码开发时经常会见到像下面的错误：</p>
-<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
-</pre></td><td class="code"><pre>java.lang.UnsatisfiedLinkError: Library foo not found
-</pre></td></tr></table></figure>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">java.lang.UnsatisfiedLinkError: Library foo not found</div></pre></td></tr></table></figure>
 
 <p>有时候这表示和它提示的一样—-未找到库。但有些时候库确实存在但不能被dlopen(3)找开，更多的失败信息可以参见异常详细说明。</p>
 <p>你遇到“library not found”异常的常见原因可能有这些：</p>
@@ -335,18 +262,10 @@ adb shell start
 <li>库文件不是用NDK构建的。这就导致设备上并不存在它所依赖的函数或者库。</li>
 </ul>
 <p>另一种UnsatisfiedLinkError错误像下面这样：</p>
-<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
-2
-3
-</pre></td><td class="code"><pre>java.lang.UnsatisfiedLinkError: myfunc
-        at Foo.myfunc(Native Method)
-        at Foo.main(Foo.java:<span class="number">10</span>)
-</pre></td></tr></table></figure>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">java.lang.UnsatisfiedLinkError: myfunc</div><div class="line">        at Foo.myfunc(Native Method)</div><div class="line">        at Foo.main(Foo.java:<span class="number">10</span>)</div></pre></td></tr></table></figure>
 
 <p>在日志中，你会发现：</p>
-<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
-</pre></td><td class="code"><pre>W/dalvikvm(  <span class="number">880</span>): No implementation found <span class="keyword">for</span> <span class="keyword">native</span> LFoo;.myfunc ()V
-</pre></td></tr></table></figure>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">W/dalvikvm(  <span class="number">880</span>): No implementation found <span class="keyword">for</span> <span class="keyword">native</span> LFoo;.myfunc ()V</div></pre></td></tr></table></figure>
 
 <p>这意味着运行时尝试匹配一个方法但是没有成功，这种情况常见的原因有：</p>
 <ul>
@@ -361,19 +280,11 @@ adb shell start
 <h1 id="FAQ:_为什么FindClass不能找到我的类?">FAQ: 为什么FindClass不能找到我的类?</h1>
 <p>确保类名字符串有正确的格式。JNI类名称以包名开始，然后使用左斜杠来分隔，比如java/lang/String。如果你正在查找一个数组类，你需要以对应数目的综括号开头，使用“L”和“;”将类名两头包起来，所以一个一维字符串数组应该写成[Ljava/lang/String;。</p>
 <p>如果类名称看上去正确，你可能运行时遇到了类加载器的问题。FindClass想在与你代码相关的类加载器中开始查找指定的类。检查调用堆栈，可能看起像：</p>
-<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
-2
-3
-</pre></td><td class="code"><pre>Foo.myfunc(Native Method)
-Foo.main(Foo.java:<span class="number">10</span>)
-dalvik.system.NativeStart.main(Native Method)
-</pre></td></tr></table></figure>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">Foo.myfunc(Native Method)</div><div class="line">Foo.main(Foo.java:<span class="number">10</span>)</div><div class="line">dalvik.system.NativeStart.main(Native Method)</div></pre></td></tr></table></figure>
 
 <p>最顶层的方法是Foo.myfunc。FindClass找到与类Foo相关的ClassLoader对象然后使用它。</p>
 <p>这通常正是你所想的。如果你创建了自己的线程那么就会遇到麻烦（也许是调用了pthread_create然后使用AttachCurrentThread进行了连接）。现在跟踪堆栈可能像下面这样：</p>
-<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
-</pre></td><td class="code"><pre>dalvik.system.NativeStart.run(Native Method)
-</pre></td></tr></table></figure>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dalvik.system.NativeStart.run(Native Method)</div></pre></td></tr></table></figure>
 
 <p>最顶层的方法是NativeStart.run，它不是你应用内的方法。如果你从这个线程中调用FindClass，JavaVM将会启动“系统（system）”的而不是与你应用相关的加载器，因此试图查找应用内定义的类都将会失败。</p>
 <p>下面有几种方法可以解决这个问题：</p>
@@ -431,7 +342,7 @@ var duoshuoQuery = {short_name:"pedant"};
 </section>
 
 </div></div>
-      <aside id="sidebar" class="alignright">
+    <aside id="sidebar" class="alignright">
   <div class="search">
   <form action="//google.com/search" method="get" accept-charset="utf-8">
     <input type="search" name="q" results="0" placeholder="搜索">
@@ -455,7 +366,7 @@ var duoshuoQuery = {short_name:"pedant"};
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/cc++/">c/c++</a><small>2</small></li>
+    <li><a href="/tags/c-c/">c/c++</a><small>2</small></li>
   
     <li><a href="/tags/java/">java</a><small>5</small></li>
   
@@ -487,14 +398,14 @@ var duoshuoQuery = {short_name:"pedant"};
 </aside>
     
     <div class="clearfix"></div>
-  </div>
-  <footer id="footer" class="inner"><div class="aligncenter">
+</div>
+<footer id="footer" class="inner"><div class="aligncenter">
   
   &copy; 2014 Yanyuetian
   
 </div>
 <div class="clearfix"></div></footer>
-  <script src="http://cdn.staticfile.org/jquery/2.1.1-rc2/jquery.min.js"></script>
+<script src="http://cdn.staticfile.org/jquery/2.1.1-rc2/jquery.min.js"></script>
 <script src="/js/jquery.imagesloaded.min.js"></script>
 
 <script type="text/javascript">
@@ -537,7 +448,7 @@ var duoshuoQuery = {short_name:"pedant"};
 </script>
 
 <script src="https://www.zybuluo.com/static/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-  <!-- Baidu Button BEGIN -->
+<!-- Baidu Button BEGIN -->
 <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"1","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"1","bdPos":"left","bdTop":"250"}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
  <!-- Baidu Button END -->
 
@@ -547,3 +458,5 @@ var duoshuoQuery = {short_name:"pedant"};
 
 </body>
 </html>
+
+

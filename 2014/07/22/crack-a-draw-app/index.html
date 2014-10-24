@@ -1,3 +1,4 @@
+
 <!DOCTYPE HTML>
 <html>
 <head>
@@ -27,7 +28,7 @@
 
 
 <body>
-  <header id="header" class="inner"><div class="blog-header">
+<header id="header" class="inner"><div class="blog-header">
   <h1><a href="/">书呆子精神院</a></h1>
   <h2>一起发呆，一起发疯</h2>
 </div>
@@ -44,9 +45,9 @@
   <div class="clearfix"></div>
 </nav>
 <div class="clearfix"></div></header>
-  <div id="content" class="inner">
+<div id="content" class="inner">
     
-      <div id="main-col" class="alignleft"><div id="wrapper"><article class="android">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="android">
   
     <div class="gallery">
   <div class="photoset">
@@ -90,118 +91,22 @@
 <h3 id="顺水推舟"><strong>顺水推舟</strong></h3>
 <p>由上面我们知道了抽奖页的Url。好了，我们首先在浏览器上打开这个Url，看看它的抽奖是怎样一步步实现的。</p>
 <p>这个页面打开后，在页面正中间有一个用来作抽奖操作的按钮，嵌套样式名为.lucky-btn .lucky-cell-conn。当然在浏览器上这个程序是运行不起来的，我们关心的只是开始抽奖这个动作是怎样发起的。查看源码打开main.js。js文件竟然没有压缩，就更方便我们逆向跟踪了。我们找到对这个按钮绑定点击事件的位置：</p>
-<figure class="highlight JAVASCRIPT"><figcaption><span>main.js</span></figcaption><table><tr><td class="gutter"><pre>1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-</pre></td><td class="code"><pre><span class="function"><span class="keyword">function</span> <span class="title">init</span><span class="params">(info)</span> {</span>
-    ...
-    <span class="keyword">var</span> deviceID=info.deviceId;
-    checkDrawEnable(drawingObject,deviceID);
-    $(<span class="string">".lucky-btn .lucky-cell-conn"</span>).on(<span class="string">"click"</span>,<span class="function"><span class="keyword">function</span><span class="params">(e)</span>{</span>
-        ...
-        window.setTimeout(<span class="function"><span class="keyword">function</span><span class="params">()</span>{</span>
-            ..
-            getJSONP(BASE_URL+<span class="string">"draw/"</span>+deviceID,<span class="function"><span class="keyword">function</span><span class="params">(data)</span>{</span>
-                drawResult(drawingObject,data);
-            });
-        },<span class="built_in">Math</span>.random()*<span class="number">1000</span>+<span class="number">1000</span>);
-    });
-
-}
-</pre></td></tr></table></figure>
+<figure class="highlight JAVASCRIPT"><figcaption><span>main.js</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">init</span><span class="params">(info)</span> </span>{</div><div class="line">    ...</div><div class="line">    <span class="keyword">var</span> deviceID=info.deviceId;</div><div class="line">    checkDrawEnable(drawingObject,deviceID);</div><div class="line">    $(<span class="string">".lucky-btn .lucky-cell-conn"</span>).on(<span class="string">"click"</span>,<span class="function"><span class="keyword">function</span><span class="params">(e)</span></span>{</div><div class="line">        ...</div><div class="line">        <span class="built_in">window</span>.setTimeout(<span class="function"><span class="keyword">function</span><span class="params">()</span></span>{</div><div class="line">            ..</div><div class="line">            getJSONP(BASE_URL+<span class="string">"draw/"</span>+deviceID,<span class="function"><span class="keyword">function</span><span class="params">(data)</span></span>{</div><div class="line">                drawResult(drawingObject,data);</div><div class="line">            });</div><div class="line">        },<span class="built_in">Math</span>.random()*<span class="number">1000</span>+<span class="number">1000</span>);</div><div class="line">    });</div><div class="line"></div><div class="line">}</div></pre></td></tr></table></figure>
 
 <p>ok，在这里我们就直接发现了，服务端用来判断用户当天已抽奖的依据是<strong>DeviceId（设备ID）</strong>。现在我们需要的是一步步逆向跟踪，找到是谁调用了init函数并带入的info参数是怎样构成的，这样似乎整个程序逻辑就会变得清晰起来。</p>
 <p>这个网页中bridge对象为java层注入的对象，而脚本中一些初始化信息也是通过调用java方法获得的。那么我们要跟踪整个代码流程，就必须对java代码也进行逆向分析。首先拿到应用的apk包，unzip后使用baksmali将classes.dex解为smali代码包。结合脚本代码，对代码调用层次一步步追踪，这个过程需要你对smali代码也比较熟悉。最后得到如下图所示的调用流程图（具体追踪过程就不在这展开）：</p>
 <p><img src="/images/draw_code_reverse.jpg" alt="image"></p>
 <p>由此，我们就知道deviceId串是主要就由<strong>Lcom/xx/util/e;-&gt;a(Landroid/content/Context;)Ljava/lang/String;</strong>方法负责生成。这个方法中获取到AndroidID与DeviceId后用”_”符连接。</p>
 <p>而<strong>Lcom/xx/util/e;-&gt;j(Landroid/content/Context;)Ljava/lang/String;</strong>就是获取DeviceId的方法，具体的smali代码为：</p>
-<figure class="highlight JAVA"><figcaption><span>Lcom/xx/util/e;->j(Landroid/content/Context;)Ljava/lang/String;</span></figcaption><table><tr><td class="gutter"><pre>1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-</pre></td><td class="code"><pre>.method <span class="keyword">public</span> <span class="keyword">static</span> <span class="title">j</span>(Landroid/content/Context;)Ljava/lang/String;
-    .registers <span class="number">2</span>
-
-    <span class="keyword">const</span>-string v0, <span class="string">"phone"</span>
-
-    invoke-virtual {p0, v0}, Landroid/content/Context;-&gt;getSystemService(Ljava/lang/String;)Ljava/lang/Object;
-
-    move-result-object v0
-
-    check-cast v0, Landroid/telephony/TelephonyManager;
-
-    invoke-virtual {v0}, Landroid/telephony/TelephonyManager;-&gt;getDeviceId()Ljava/lang/String;
-
-    move-result-object v0
-
-    <span class="keyword">return</span>-object v0
-.end method
-</pre></td></tr></table></figure>
+<figure class="highlight JAVA"><figcaption><span>Lcom/xx/util/e;->j(Landroid/content/Context;)Ljava/lang/String;</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">.method <span class="keyword">public</span> <span class="keyword">static</span> <span class="title">j</span>(Landroid/content/Context;)Ljava/lang/String;</div><div class="line">    .registers <span class="number">2</span></div><div class="line"></div><div class="line">    <span class="keyword">const</span>-string v0, <span class="string">"phone"</span></div><div class="line"></div><div class="line">    invoke-virtual {p0, v0}, Landroid/content/Context;-&gt;getSystemService(Ljava/lang/String;)Ljava/lang/Object;</div><div class="line"></div><div class="line">    move-result-object v0</div><div class="line"></div><div class="line">    check-cast v0, Landroid/telephony/TelephonyManager;</div><div class="line"></div><div class="line">    invoke-virtual {v0}, Landroid/telephony/TelephonyManager;-&gt;getDeviceId()Ljava/lang/String;</div><div class="line"></div><div class="line">    move-result-object v0</div><div class="line"></div><div class="line">    <span class="keyword">return</span>-object v0</div><div class="line">.end method</div></pre></td></tr></table></figure>
 
 <p>至此找到获取DeviceId真正的位置，我们就<strong>破案</strong>了。</p>
 <h3 id="偷梁换柱"><strong>偷梁换柱</strong></h3>
 <p>上面我们知道了，服务端用来判断用户当天已抽奖的依据是DeviceId，同时我们也追踪到了代码中获取DeviceId具体位置。这样，程序每次获取DeviceId时我们就可以<strong>伪造返回值</strong>（每次伪造的结果都不能相同），就实现一天无限次抽奖了。那怎样伪造这样的返回值呢，下面的简单一句Java代码就可以实现了。</p>
-<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
-</pre></td><td class="code"><pre><span class="keyword">return</span> String.valueOf(System.currentTimeMillis() ^ <span class="number">537400335373457</span>L);
-</pre></td></tr></table></figure>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">return</span> String.valueOf(System.currentTimeMillis() ^ <span class="number">537400335373457</span>L);</div></pre></td></tr></table></figure>
 
 <p>把上面这句翻译成smali代码后，替换掉j(Landroid/content/Context;)Ljava/lang/String;方法内原来的全部smali代码，偷梁换柱。</p>
-<figure class="highlight JAVA"><table><tr><td class="gutter"><pre>1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-</pre></td><td class="code"><pre>.registers <span class="number">9</span>
-
-invoke-<span class="keyword">static</span> {}, Ljava/lang/System;-&gt;currentTimeMillis()J
-
-move-result-wide v0
-
-<span class="keyword">const</span>-wide v2, <span class="number">0x1e8c344179491</span>L
-
-xor-<span class="keyword">long</span>/<span class="number">2</span>addr v0, v2
-
-invoke-<span class="keyword">static</span> {v0, v1}, Ljava/lang/String;-&gt;valueOf(J)Ljava/lang/String;
-
-move-result-object v0
-
-<span class="keyword">return</span>-object v0
-</pre></td></tr></table></figure>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">.registers <span class="number">9</span></div><div class="line"></div><div class="line">invoke-<span class="keyword">static</span> {}, Ljava/lang/System;-&gt;currentTimeMillis()J</div><div class="line"></div><div class="line">move-result-wide v0</div><div class="line"></div><div class="line"><span class="keyword">const</span>-wide v2, <span class="number">0x1e8c344179491</span>L</div><div class="line"></div><div class="line">xor-<span class="keyword">long</span>/<span class="number">2</span>addr v0, v2</div><div class="line"></div><div class="line">invoke-<span class="keyword">static</span> {v0, v1}, Ljava/lang/String;-&gt;valueOf(J)Ljava/lang/String;</div><div class="line"></div><div class="line">move-result-object v0</div><div class="line"></div><div class="line"><span class="keyword">return</span>-object v0</div></pre></td></tr></table></figure>
 
 <p>最后用smali.jar打包回去，签名后安装。运行起来后应用在抽奖页面已经没有了次数限制。</p>
 <h3 id="魔高一尺，道高一丈"><strong>魔高一尺，道高一丈</strong></h3>
@@ -254,7 +159,7 @@ var duoshuoQuery = {short_name:"pedant"};
 </section>
 
 </div></div>
-      <aside id="sidebar" class="alignright">
+    <aside id="sidebar" class="alignright">
   <div class="search">
   <form action="//google.com/search" method="get" accept-charset="utf-8">
     <input type="search" name="q" results="0" placeholder="搜索">
@@ -278,7 +183,7 @@ var duoshuoQuery = {short_name:"pedant"};
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/cc++/">c/c++</a><small>2</small></li>
+    <li><a href="/tags/c-c/">c/c++</a><small>2</small></li>
   
     <li><a href="/tags/java/">java</a><small>5</small></li>
   
@@ -310,14 +215,14 @@ var duoshuoQuery = {short_name:"pedant"};
 </aside>
     
     <div class="clearfix"></div>
-  </div>
-  <footer id="footer" class="inner"><div class="aligncenter">
+</div>
+<footer id="footer" class="inner"><div class="aligncenter">
   
   &copy; 2014 Yanyuetian
   
 </div>
 <div class="clearfix"></div></footer>
-  <script src="http://cdn.staticfile.org/jquery/2.1.1-rc2/jquery.min.js"></script>
+<script src="http://cdn.staticfile.org/jquery/2.1.1-rc2/jquery.min.js"></script>
 <script src="/js/jquery.imagesloaded.min.js"></script>
 
 <script type="text/javascript">
@@ -360,7 +265,7 @@ var duoshuoQuery = {short_name:"pedant"};
 </script>
 
 <script src="https://www.zybuluo.com/static/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-  <!-- Baidu Button BEGIN -->
+<!-- Baidu Button BEGIN -->
 <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"1","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"1","bdPos":"left","bdTop":"250"}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
  <!-- Baidu Button END -->
 
@@ -370,3 +275,5 @@ var duoshuoQuery = {short_name:"pedant"};
 
 </body>
 </html>
+
+

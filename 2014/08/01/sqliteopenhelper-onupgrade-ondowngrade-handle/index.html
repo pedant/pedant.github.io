@@ -1,3 +1,4 @@
+
 <!DOCTYPE HTML>
 <html>
 <head>
@@ -31,7 +32,7 @@ onUpgrade：调用时机是用户在做应用更新，覆盖安装后启动，�
 
 
 <body>
-  <header id="header" class="inner"><div class="blog-header">
+<header id="header" class="inner"><div class="blog-header">
   <h1><a href="/">书呆子精神院</a></h1>
   <h2>一起发呆，一起发疯</h2>
 </div>
@@ -48,9 +49,9 @@ onUpgrade：调用时机是用户在做应用更新，覆盖安装后启动，�
   <div class="clearfix"></div>
 </nav>
 <div class="clearfix"></div></header>
-  <div id="content" class="inner">
+<div id="content" class="inner">
     
-      <div id="main-col" class="alignleft"><div id="wrapper"><article class="android">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="android">
   
     <div class="gallery">
   <div class="photoset">
@@ -97,102 +98,18 @@ onUpgrade：调用时机是用户在做应用更新，覆盖安装后启动，�
 </ul>
 <p>而处理上面这些问题都要在不损害旧数据库历史数据的前提下完成。这里我们假设用户手机上之前安装的是数据库版本为1的包，升级安装的是数据库版本号为2的包。这时我们要在数据库版本为2的包在去处理这些升级逻辑。</p>
 <p>首先是扩展一个表的字段在onUpgrade中的实现为：</p>
-<figure class="highlight JAVA"><figcaption><span>MyDBHelper.java</span></figcaption><table><tr><td class="gutter"><pre>1
-2
-3
-4
-5
-6
-7
-</pre></td><td class="code"><pre><span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onUpgrade</span>(SQLiteDatabase db, <span class="keyword">int</span> oldVersion, <span class="keyword">int</span> newVersion) {
-    <span class="comment">//旧数据库版本为1，才为表pedant添加一个student_name字段</span>
-    <span class="keyword">if</span>(oldVersion &lt; <span class="number">2</span>) {
-        db.execSQL(<span class="string">"ALTER TABLE pedant ADD COLUMN student_name text"</span>);
-    }
-}
-</pre></td></tr></table></figure>
+<figure class="highlight JAVA"><figcaption><span>MyDBHelper.java</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="annotation">@Override</span></div><div class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onUpgrade</span>(SQLiteDatabase db, <span class="keyword">int</span> oldVersion, <span class="keyword">int</span> newVersion) {</div><div class="line">    <span class="comment">//旧数据库版本为1，才为表pedant添加一个student_name字段</span></div><div class="line">    <span class="keyword">if</span>(oldVersion &lt; <span class="number">2</span>) {</div><div class="line">        db.execSQL(<span class="string">"ALTER TABLE pedant ADD COLUMN student_name text"</span>);</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
 
 <p>SQLite对ALTER TABLE的支持是有限的，你可以在一个存在表上添加一个字段到末尾，或者是改变表的名称。但如果你想做更复杂的操作，比如删除一个表已有的字段，就要重新创建这个表并完成数据迁移，而不能使用<strong>DROP COLUMN</strong>这样方便的命令了。详见<a href="http://www.sqlite.org/faq.html#q11" target="_blank" rel="external">SQLite Frequently Questions</a></p>
 <p>比如表pedant原来有三个字段a、b、c，现在想删除c字段，那么在onUpgrade中写法如下：</p>
-<figure class="highlight JAVA"><figcaption><span>MyDBHelper.java</span></figcaption><table><tr><td class="gutter"><pre>1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-</pre></td><td class="code"><pre><span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onUpgrade</span>(SQLiteDatabase db, <span class="keyword">int</span> oldVersion, <span class="keyword">int</span> newVersion) {
-    <span class="comment">//旧数据库版本为1，删除表pedant的c字段</span>
-    <span class="keyword">if</span>(oldVersion &lt; <span class="number">2</span>) {
-        db.beginTransaction();
-        <span class="keyword">try</span> {
-            db.execSQL(<span class="string">"CREATE TEMPORARY TABLE pe_backup (a, b);"</span>);
-            db.execSQL(<span class="string">"INSERT INTO pe_backup SELECT a, b FROM pedant;"</span>);
-            db.execSQL(<span class="string">"DROP TABLE pedant;"</span>);
-            db.execSQL(<span class="string">"CREATE TABLE pedant(a text, b text);"</span>);
-            db.execSQL(<span class="string">"INSERT INTO pedant SELECT a, b FROM pe_backup;"</span>);
-            db.execSQL(<span class="string">"DROP TABLE pe_backup;"</span>);
-            db.setTransactionSuccessful();
-        } <span class="keyword">finally</span> {
-            db.endTransaction();
-        }
-    }
-}
-</pre></td></tr></table></figure>
+<figure class="highlight JAVA"><figcaption><span>MyDBHelper.java</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="annotation">@Override</span></div><div class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onUpgrade</span>(SQLiteDatabase db, <span class="keyword">int</span> oldVersion, <span class="keyword">int</span> newVersion) {</div><div class="line">    <span class="comment">//旧数据库版本为1，删除表pedant的c字段</span></div><div class="line">    <span class="keyword">if</span>(oldVersion &lt; <span class="number">2</span>) {</div><div class="line">        db.beginTransaction();</div><div class="line">        <span class="keyword">try</span> {</div><div class="line">            db.execSQL(<span class="string">"CREATE TEMPORARY TABLE pe_backup (a, b);"</span>);</div><div class="line">            db.execSQL(<span class="string">"INSERT INTO pe_backup SELECT a, b FROM pedant;"</span>);</div><div class="line">            db.execSQL(<span class="string">"DROP TABLE pedant;"</span>);</div><div class="line">            db.execSQL(<span class="string">"CREATE TABLE pedant(a text, b text);"</span>);</div><div class="line">            db.execSQL(<span class="string">"INSERT INTO pedant SELECT a, b FROM pe_backup;"</span>);</div><div class="line">            db.execSQL(<span class="string">"DROP TABLE pe_backup;"</span>);</div><div class="line">            db.setTransactionSuccessful();</div><div class="line">        } <span class="keyword">finally</span> {</div><div class="line">            db.endTransaction();</div><div class="line">        }</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
 
 <p>这样就既完成了对c字段的删除也保留了原来表上的数据。</p>
 <p>最后一种情况最简单直接执行CREATE语句就要可以了。</p>
-<figure class="highlight JAVA"><figcaption><span>MyDBHelper.java</span></figcaption><table><tr><td class="gutter"><pre>1
-2
-3
-4
-5
-6
-7
-</pre></td><td class="code"><pre><span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onUpgrade</span>(SQLiteDatabase db, <span class="keyword">int</span> oldVersion, <span class="keyword">int</span> newVersion) {
-    <span class="comment">//旧数据库版本为1，创建新表newtb</span>
-    <span class="keyword">if</span>(oldVersion &lt; <span class="number">2</span>) {
-        db.execSQL(<span class="string">"CREATE TABLE newtb(a text, b text);"</span>);
-    }
-}
-</pre></td></tr></table></figure>
+<figure class="highlight JAVA"><figcaption><span>MyDBHelper.java</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="annotation">@Override</span></div><div class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onUpgrade</span>(SQLiteDatabase db, <span class="keyword">int</span> oldVersion, <span class="keyword">int</span> newVersion) {</div><div class="line">    <span class="comment">//旧数据库版本为1，创建新表newtb</span></div><div class="line">    <span class="keyword">if</span>(oldVersion &lt; <span class="number">2</span>) {</div><div class="line">        db.execSQL(<span class="string">"CREATE TABLE newtb(a text, b text);"</span>);</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
 
 <p>数据库在做升级时我们能明确地知道当前我们要对各旧表进行什么样的操作来兼容新版本。但如果在数据库降级时，情况就不一样了，针对我们开发新版本2时， 我们不能明确地知道以后的新版本比如版本3、4的数据库结构走向是怎样的。比如以后用户从版本3回退到我们正在开发的版本2，由于我们开发当时不能预知版本3的表结构，不知版本3的数据表能否兼容到版本2（假如版本3升级时删除了一个版本2一直在用的表字段，这时回退数据结构可能就不兼容了），那么我们在开发版本2时最稳妥的做法是<strong>重写onDowngrade时把所有当前版本将用到的表全部重建，即降级时扔掉以前全部的数据</strong>。</p>
-<figure class="highlight JAVA"><figcaption><span>MyDBHelper.java</span></figcaption><table><tr><td class="gutter"><pre>1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-</pre></td><td class="code"><pre><span class="comment">// 因为我们无法预知未来版本的表结构，向下兼容时最稳妥的方法就是将该版本自己需要的表重构一次</span>
-<span class="annotation">@Override</span>
-<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onDowngrade</span> (SQLiteDatabase db, <span class="keyword">int</span> oldVersion, <span class="keyword">int</span> newVersion) {
-    db.execSQL(<span class="string">"DROP TABLE IF EXISTS t1;"</span>);
-    db.execSQL(<span class="string">"DROP TABLE IF EXISTS t2;"</span>);
-    db.execSQL(<span class="string">"DROP TABLE IF EXISTS t3;"</span>);
-    db.execSQL(<span class="string">"DROP TABLE IF EXISTS t4;"</span>);
-    ....
-    onCreate(db); <span class="comment">// 建表</span>
-}
-</pre></td></tr></table></figure>
+<figure class="highlight JAVA"><figcaption><span>MyDBHelper.java</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 因为我们无法预知未来版本的表结构，向下兼容时最稳妥的方法就是将该版本自己需要的表重构一次</span></div><div class="line"><span class="annotation">@Override</span></div><div class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onDowngrade</span> (SQLiteDatabase db, <span class="keyword">int</span> oldVersion, <span class="keyword">int</span> newVersion) {</div><div class="line">    db.execSQL(<span class="string">"DROP TABLE IF EXISTS t1;"</span>);</div><div class="line">    db.execSQL(<span class="string">"DROP TABLE IF EXISTS t2;"</span>);</div><div class="line">    db.execSQL(<span class="string">"DROP TABLE IF EXISTS t3;"</span>);</div><div class="line">    db.execSQL(<span class="string">"DROP TABLE IF EXISTS t4;"</span>);</div><div class="line">    ....</div><div class="line">    onCreate(db); <span class="comment">// 建表</span></div><div class="line">}</div></pre></td></tr></table></figure>
 
 <p><strong>欢迎转载，请注明出处链接！！！</strong></p>
 
@@ -234,7 +151,7 @@ var duoshuoQuery = {short_name:"pedant"};
 </section>
 
 </div></div>
-      <aside id="sidebar" class="alignright">
+    <aside id="sidebar" class="alignright">
   <div class="search">
   <form action="//google.com/search" method="get" accept-charset="utf-8">
     <input type="search" name="q" results="0" placeholder="搜索">
@@ -258,7 +175,7 @@ var duoshuoQuery = {short_name:"pedant"};
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/cc++/">c/c++</a><small>2</small></li>
+    <li><a href="/tags/c-c/">c/c++</a><small>2</small></li>
   
     <li><a href="/tags/java/">java</a><small>5</small></li>
   
@@ -290,14 +207,14 @@ var duoshuoQuery = {short_name:"pedant"};
 </aside>
     
     <div class="clearfix"></div>
-  </div>
-  <footer id="footer" class="inner"><div class="aligncenter">
+</div>
+<footer id="footer" class="inner"><div class="aligncenter">
   
   &copy; 2014 Yanyuetian
   
 </div>
 <div class="clearfix"></div></footer>
-  <script src="http://cdn.staticfile.org/jquery/2.1.1-rc2/jquery.min.js"></script>
+<script src="http://cdn.staticfile.org/jquery/2.1.1-rc2/jquery.min.js"></script>
 <script src="/js/jquery.imagesloaded.min.js"></script>
 
 <script type="text/javascript">
@@ -340,7 +257,7 @@ var duoshuoQuery = {short_name:"pedant"};
 </script>
 
 <script src="https://www.zybuluo.com/static/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-  <!-- Baidu Button BEGIN -->
+<!-- Baidu Button BEGIN -->
 <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"1","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"1","bdPos":"left","bdTop":"250"}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
  <!-- Baidu Button END -->
 
@@ -350,3 +267,5 @@ var duoshuoQuery = {short_name:"pedant"};
 
 </body>
 </html>
+
+
