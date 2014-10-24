@@ -1,0 +1,262 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>如何在XML中使用自定义Animation动画类 | 书呆子精神院</title>
+  <meta name="author" content="Yanyuetian">
+  
+  <meta name="description" content="在安卓应用的动画开发中，可能SDK中自带的补间动画不能满足应用的需求，需要在Java代码中自定义一些动画类，当然都是继承自Animation类。实现之后，我们一般直接在代码中使用，类似下面这样：
+1234CustomAnimation customAnimation = new CustomAnimation();customAnimation.setDuration(3000);customAnimation.setFillAfter(true);effectView.startAnimation(customAnimation);
+
+当View同时要应用像Scale，Alpha这样的补间动画时，你就需要多添加类似下面的代码：
+1234567891011121314CustomAnimation customAnimation = new CustomAnimation();customAnimation.setDuration(3000);customAnimation.setFillAfter(true);Animation scaleAnimation = new ScaleAnimation(0f, 1f, 0f, 1f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);Animation alphaAnimation = new AlphaAnimation(0.1f,1.0f);scaleAnimation.setDuration(10000);alphaAnimation.setDuration(10000);AnimationSet set = new AnimationSet(true);set.addAnimation(customAnimation);set.addAnimation(scaleAnimation);set.addAnimation(alphaAnimation);set.setFillAfter(true);set.setFillEnabled(true);effectView.startAnimation(set);">
+  
+  
+  <meta name="keywords" content="安卓动画教程,Android Animation,Custom Animation,自定义Animation,从XML中,加载自定义动画">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta property="og:title" content="如何在XML中使用自定义Animation动画类"/>
+  <meta property="og:site_name" content="书呆子精神院"/>
+  
+  <meta property="og:image" content="undefined"/>
+  
+  <link href="/favicon.ico" rel="icon" type="image/x-ico">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+</head>
+
+
+<body>
+<header id="header" class="inner"><div class="blog-header">
+  <h1><a href="/">书呆子精神院</a></h1>
+  <h2>一起发呆，一起发疯</h2>
+</div>
+<nav id="main-nav" class="blog-nav">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+      <li><a href="/about">关于</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+<div id="content" class="inner">
+    
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="android">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2014-10-13T09:20:26.000Z"><a href="/2014/10/13/custom-animation-in-xml/">10月13 2014</a></time>
+      
+      
+  
+    <h1 class="title">如何在XML中使用自定义Animation动画类</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在安卓应用的动画开发中，可能SDK中自带的补间动画不能满足应用的需求，需要在Java代码中自定义一些动画类，当然都是继承自Animation类。实现之后，我们一般直接在代码中使用，类似下面这样：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">CustomAnimation customAnimation = <span class="keyword">new</span> CustomAnimation();</div><div class="line">customAnimation.setDuration(<span class="number">3000</span>);</div><div class="line">customAnimation.setFillAfter(<span class="keyword">true</span>);</div><div class="line">effectView.startAnimation(customAnimation);</div></pre></td></tr></table></figure>
+
+<p>当View同时要应用像Scale，Alpha这样的补间动画时，你就需要多添加类似下面的代码：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">CustomAnimation customAnimation = <span class="keyword">new</span> CustomAnimation();</div><div class="line">customAnimation.setDuration(<span class="number">3000</span>);</div><div class="line">customAnimation.setFillAfter(<span class="keyword">true</span>);</div><div class="line">Animation scaleAnimation = <span class="keyword">new</span> ScaleAnimation(<span class="number">0</span>f, <span class="number">1</span>f, <span class="number">0</span>f, <span class="number">1</span>f, Animation.RELATIVE_TO_SELF, <span class="number">0.5</span>f, Animation.RELATIVE_TO_SELF, <span class="number">0.5</span>f);</div><div class="line">Animation alphaAnimation = <span class="keyword">new</span> AlphaAnimation(<span class="number">0.1</span>f,<span class="number">1.0</span>f);</div><div class="line">scaleAnimation.setDuration(<span class="number">10000</span>);</div><div class="line">alphaAnimation.setDuration(<span class="number">10000</span>);</div><div class="line">AnimationSet set = <span class="keyword">new</span> AnimationSet(<span class="keyword">true</span>);</div><div class="line">set.addAnimation(customAnimation);</div><div class="line">set.addAnimation(scaleAnimation);</div><div class="line">set.addAnimation(alphaAnimation);</div><div class="line">set.setFillAfter(<span class="keyword">true</span>);</div><div class="line">set.setFillEnabled(<span class="keyword">true</span>);</div><div class="line">effectView.startAnimation(set);</div></pre></td></tr></table></figure>
+
+<a id="more"></a>
+
+<p>如果直接在xml中把所需的所有补间动画，包括自定义动画类放到一个集合，事情看起来就没那么复杂。在xml定义好动画集有两个好处：</p>
+<ul>
+<li>使用动画时需要更少的Java代码，整体上看上去更干净</li>
+<li>在xml中定义，各个动画属性一目了然也更集中，方便阅读与维护</li>
+</ul>
+<p>既然有这样的好处，我们就开始干吧。首先在xml中像下面这样定义一个动画集：</p>
+<figure class="highlight hxml"><figcaption><span>R.anim.my_anim_set</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="xml"><span class="pi">&lt;?xml version="1.0" encoding="utf-8"?&gt;</span></span></div><div class="line"><span class="tag">&lt;<span class="title">set</span> <span class="attribute">xmlns:android</span>=<span class="value">"http://schemas.android.com/apk/res/android"</span></span></div><div class="line">     <span class="attribute">xmlns:myapp</span>=<span class="value">"http://schemas.android.com/apk/res-auto"</span></div><div class="line">     <span class="attribute">android:interpolator</span>=<span class="value">"@android:anim/linear_interpolator"</span></div><div class="line">     <span class="attribute">android:shareInterpolator</span>=<span class="value">"true"</span>&gt;</div><div class="line">    <span class="tag">&lt;<span class="title">alpha</span></span></div><div class="line">        <span class="attribute">android:fromAlpha</span>=<span class="value">"0"</span></div><div class="line">        <span class="attribute">android:toAlpha</span>=<span class="value">"1"</span></div><div class="line">        <span class="attribute">android:duration</span>=<span class="value">"400"</span>/&gt;</div><div class="line">    <span class="tag">&lt;<span class="title">myapp:cn.your.packagename.xx.CustomAnimation</span></span></div><div class="line">        <span class="attribute">myapp:customProp1</span>=<span class="value">"x"</span>    &lt;!<span class="attribute">--</span> 动画类自定义属性<span class="attribute">1</span> <span class="attribute">--</span>&gt;</div><div class="line">        myapp:customProp2="30"   <span class="comment">&lt;!-- 动画类自定义属性2 --&gt;</span></div><div class="line">        myapp:customProp3="50%"  <span class="comment">&lt;!-- 动画类自定义属性3 --&gt;</span></div><div class="line">        android:duration="400"</div><div class="line">        android:fillAfter="true"/&gt;</div><div class="line"><span class="tag">&lt;/<span class="title">set</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>然后，我们按照常理来，在Java代码中这样来加载我们定义的xml动画集：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">AnimationSet set = (AnimationSet)AnimationUtils.loadAnimation(<span class="keyword">this</span>, R.anim.my_anim_set);</div><div class="line">effectView.startAnimation(set);</div></pre></td></tr></table></figure>
+
+<p>但是，抱歉！上面的代码是不正确执行，运行起来程序会直接终止。那什么原因呢？查看AnimationUtils.loadAnimation源代码我们知道，在其从xml载入动画类的时候，只认<strong>alpha、scale、rotate、translate</strong>这几个SDK自带的动画类，而我们写入的自定义动画类CustomAnimation会导致其报<strong><font color="red">Unknown animation name</font></strong>的异常。官方SDK也没有提供解决这个问题的其他API方法，那么怎么解决呢？ 很简单，只需在原有的AnimationUtils.loadAnimation源码上改动一行，从ClassLoader载入自定义动画类即可。将其源码拷贝过来，实现一个自己的loadAnimation方法，如下：</p>
+<figure class="highlight JAVA"><figcaption><span>OptAnimationLoader.java</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">OptAnimationLoader</span> </span>{</div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Animation <span class="title">loadAnimation</span>(Context context, <span class="keyword">int</span> id) <span class="keyword">throws</span> Resources.NotFoundException {</div><div class="line">        XmlResourceParser parser = <span class="keyword">null</span>;</div><div class="line">        <span class="keyword">try</span> {</div><div class="line">            parser = context.getResources().getAnimation(id);</div><div class="line">            <span class="keyword">return</span> createAnimationFromXml(context, parser);</div><div class="line">        } <span class="keyword">catch</span> (XmlPullParserException ex) {</div><div class="line">            Resources.NotFoundException rnf = <span class="keyword">new</span> Resources.NotFoundException(<span class="string">"Can't load animation resource ID #0x"</span> + Integer.toHexString(id));</div><div class="line">            rnf.initCause(ex);</div><div class="line">            <span class="keyword">throw</span> rnf;</div><div class="line">        } <span class="keyword">catch</span> (IOException ex) {</div><div class="line">            Resources.NotFoundException rnf = <span class="keyword">new</span> Resources.NotFoundException(<span class="string">"Can't load animation resource ID #0x"</span> + Integer.toHexString(id));</div><div class="line">            rnf.initCause(ex);</div><div class="line">            <span class="keyword">throw</span> rnf;</div><div class="line">        } <span class="keyword">finally</span> {</div><div class="line">            <span class="keyword">if</span> (parser != <span class="keyword">null</span>) parser.close();</div><div class="line">        }</div><div class="line">    }</div><div class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Animation <span class="title">createAnimationFromXml</span>(Context c, XmlPullParser parser) <span class="keyword">throws</span> XmlPullParserException, IOException {</div><div class="line">        <span class="keyword">return</span> createAnimationFromXml(c, parser, <span class="keyword">null</span>, Xml.asAttributeSet(parser));</div><div class="line">    }</div><div class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Animation <span class="title">createAnimationFromXml</span>(Context c, XmlPullParser parser, AnimationSet parent, AttributeSet attrs) <span class="keyword">throws</span> XmlPullParserException, IOException {</div><div class="line">        Animation anim = <span class="keyword">null</span>;</div><div class="line">        <span class="comment">// Make sure we are on a start tag.</span></div><div class="line">        <span class="keyword">int</span> type;</div><div class="line">        <span class="keyword">int</span> depth = parser.getDepth();</div><div class="line">        <span class="keyword">while</span> (((type=parser.next()) != XmlPullParser.END_TAG || parser.getDepth() &gt; depth) && type != XmlPullParser.END_DOCUMENT) {</div><div class="line">            <span class="keyword">if</span> (type != XmlPullParser.START_TAG) {</div><div class="line">                <span class="keyword">continue</span>;</div><div class="line">            }</div><div class="line">            String  name = parser.getName();</div><div class="line">            <span class="keyword">if</span> (name.equals(<span class="string">"set"</span>)) {</div><div class="line">                anim = <span class="keyword">new</span> AnimationSet(c, attrs);</div><div class="line">                createAnimationFromXml(c, parser, (AnimationSet)anim, attrs);</div><div class="line">            } <span class="keyword">else</span> <span class="keyword">if</span> (name.equals(<span class="string">"alpha"</span>)) {</div><div class="line">                anim = <span class="keyword">new</span> AlphaAnimation(c, attrs);</div><div class="line">            } <span class="keyword">else</span> <span class="keyword">if</span> (name.equals(<span class="string">"scale"</span>)) {</div><div class="line">                anim = <span class="keyword">new</span> ScaleAnimation(c, attrs);</div><div class="line">            }  <span class="keyword">else</span> <span class="keyword">if</span> (name.equals(<span class="string">"rotate"</span>)) {</div><div class="line">                anim = <span class="keyword">new</span> RotateAnimation(c, attrs);</div><div class="line">            }  <span class="keyword">else</span> <span class="keyword">if</span> (name.equals(<span class="string">"translate"</span>)) {</div><div class="line">                anim = <span class="keyword">new</span> TranslateAnimation(c, attrs);</div><div class="line">            } <span class="keyword">else</span> {</div><div class="line">                <span class="keyword">try</span> {</div><div class="line">                    anim = (Animation) Class.forName(name).getConstructor(Context.class, AttributeSet.class).newInstance(c, attrs);</div><div class="line">                } <span class="keyword">catch</span> (Exception te) {</div><div class="line">                    <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"Unknown animation name: "</span> + parser.getName() + <span class="string">" error:"</span> + te.getMessage());</div><div class="line">                }</div><div class="line">            }</div><div class="line">            <span class="keyword">if</span> (parent != <span class="keyword">null</span>) {</div><div class="line">                parent.addAnimation(anim);</div><div class="line">            }</div><div class="line">        }</div><div class="line">        <span class="keyword">return</span> anim;</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>这样，使用OptAnimationLoader.loadAnimation方法就可以从xml中载入包含自定义动画的动画集了。</p>
+<p>使用案例及更多demo见<a href="https://github.com/pedant/sweet-alert-dialog" target="_blank" rel="external"><strong>SweetAlertDialog</strong></a>。</p>
+<p><strong>欢迎转载，请注明出处链接！！！</strong></p>
+
+      
+    </div>
+  
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/android/">android</a>
+  </div>
+
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  
+  </div>
+</article>
+
+
+<section id="comment">
+<!-- Duoshuo Comment BEGIN -->
+	<div class="ds-thread"></div>
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"pedant"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = 'http://static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		|| document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+</script>
+<!-- Duoshuo Comment END -->
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:www.pedant.cn">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/android/">android</a><small>17</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/animation/">animation</a><small>10</small></li>
+  
+    <li><a href="/tags/c-c/">c/c++</a><small>2</small></li>
+  
+    <li><a href="/tags/java/">java</a><small>5</small></li>
+  
+    <li><a href="/tags/javascript/">javascript</a><small>1</small></li>
+  
+    <li><a href="/tags/jni/">jni</a><small>2</small></li>
+  
+    <li><a href="/tags/sqlite/">sqlite</a><small>1</small></li>
+  
+    <li><a href="/tags/webview/">webview</a><small>3</small></li>
+  
+    <li><a href="/tags/库移植/">库移植</a><small>1</small></li>
+  
+    <li><a href="/tags/攻防安全/">攻防安全</a><small>2</small></li>
+  
+  </ul>
+</div>
+
+
+  <div class="widget tag">
+<h3 class="title">友情链接</h3>
+<ul class="entry">
+    <li><a href="http://blog.csdn.net/Luoshengyang/" title="老罗的Android之旅">老罗的Android之旅</a></li>
+    <li><a href="http://winterland.me/" title="冬的实验室">冬的实验室</a></li>
+    <li><a href="http://blog.codingnow.com/" title="云风的BLOG">云风的BLOG</a></li>
+</ul>
+</div>
+
+</aside>
+    
+    <div class="clearfix"></div>
+</div>
+<footer id="footer" class="inner"><div class="aligncenter">
+  
+  &copy; 2014 Yanyuetian
+  
+</div>
+<div class="clearfix"></div></footer>
+<script src="http://cdn.staticfile.org/jquery/2.1.1-rc2/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+
+<script type="text/javascript">
+    var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+    document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F3bf6ccabac425846443702b3673e9f8a' type='text/javascript'%3E%3C/script%3E"));
+</script>
+
+
+
+<div id="scroll2top">
+<img src="/scroll2top/arrow.png"/>
+</div>
+<script src="/scroll2top/scroll2top.js"></script>
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script src="https://www.zybuluo.com/static/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<!-- Baidu Button BEGIN -->
+<script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"1","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"16"},"slide":{"type":"slide","bdImg":"1","bdPos":"left","bdTop":"250"}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+ <!-- Baidu Button END -->
+
+
+
+
+
+</body>
+</html>
+
+

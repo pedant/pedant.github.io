@@ -63,18 +63,22 @@
     <header>
       
         <div class="icon"></div>
-        <time datetime="2014-09-23T07:18:57.000Z"><a href="/2014/09/23/webview-touch-conflict/">9月23 2014</a></time>
+        <time datetime="2014-10-13T09:20:26.000Z"><a href="/2014/10/13/custom-animation-in-xml/">10月13 2014</a></time>
       
       
   
-    <h1 class="title"><a href="/2014/09/23/webview-touch-conflict/">完美解决WebView与上层父元素的TouchMove事件冲突</a></h1>
+    <h1 class="title"><a href="/2014/10/13/custom-animation-in-xml/">如何在XML中使用自定义Animation动画类</a></h1>
   
 
     </header>
     <div class="entry">
       
-        <p>在开发过程中你可能会遇到这样一种情况。端里面使用ViewPager嵌套了多个WebView页面，同时某一个WebView中的页面元素需要响应TouchMove事件。正如下图所示的情景：</p>
-<p><img src="/images/webparent_touch_conflict.jpg" alt="image"></p>
+        <p>在安卓应用的动画开发中，可能SDK中自带的补间动画不能满足应用的需求，需要在Java代码中自定义一些动画类，当然都是继承自Animation类。实现之后，我们一般直接在代码中使用，类似下面这样：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">CustomAnimation customAnimation = <span class="keyword">new</span> CustomAnimation();</div><div class="line">customAnimation.setDuration(<span class="number">3000</span>);</div><div class="line">customAnimation.setFillAfter(<span class="keyword">true</span>);</div><div class="line">effectView.startAnimation(customAnimation);</div></pre></td></tr></table></figure>
+
+<p>当View同时要应用像Scale，Alpha这样的补间动画时，你就需要多添加像下面这样的代码：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">CustomAnimation customAnimation = <span class="keyword">new</span> CustomAnimation();</div><div class="line">customAnimation.setDuration(<span class="number">3000</span>);</div><div class="line">customAnimation.setFillAfter(<span class="keyword">true</span>);</div><div class="line">Animation scaleAnimation = <span class="keyword">new</span> ScaleAnimation(<span class="number">0</span>f, <span class="number">1</span>f, <span class="number">0</span>f, <span class="number">1</span>f, Animation.RELATIVE_TO_SELF, <span class="number">0.5</span>f, Animation.RELATIVE_TO_SELF, <span class="number">0.5</span>f);</div><div class="line">Animation alphaAnimation = <span class="keyword">new</span> AlphaAnimation(<span class="number">0.1</span>f,<span class="number">1.0</span>f);</div><div class="line">scaleAnimation.setDuration(<span class="number">10000</span>);</div><div class="line">alphaAnimation.setDuration(<span class="number">10000</span>);</div><div class="line">AnimationSet set = <span class="keyword">new</span> AnimationSet(<span class="keyword">true</span>);</div><div class="line">set.addAnimation(customAnimation);</div><div class="line">set.addAnimation(scaleAnimation);</div><div class="line">set.addAnimation(alphaAnimation);</div><div class="line">set.setFillAfter(<span class="keyword">true</span>);</div><div class="line">set.setFillEnabled(<span class="keyword">true</span>);</div><div class="line">effectView.startAnimation(set);</div></pre></td></tr></table></figure>
+
 
       
     </div>
@@ -84,12 +88,12 @@
         
   
   <div class="tags">
-    <a href="/tags/webview/">webview</a>, <a href="/tags/java/">java</a>
+    <a href="/tags/animation/">animation</a>
   </div>
 
         
           <div style="text-align:center;">
-            <a href="/2014/09/23/webview-touch-conflict/#more" class="more-link">阅读全文</a>
+            <a href="/2014/10/13/custom-animation-in-xml/#more" class="more-link">阅读全文</a>
           </div>
                 
         
@@ -121,19 +125,22 @@
     <header>
       
         <div class="icon"></div>
-        <time datetime="2014-09-10T10:13:04.000Z"><a href="/2014/09/10/webview-optimize-points/">9月10 2014</a></time>
+        <time datetime="2014-10-13T09:20:26.000Z"><a href="/2014/10/13/custom-animation-in-xml/">10月13 2014</a></time>
       
       
   
-    <h1 class="title"><a href="/2014/09/10/webview-optimize-points/">Android WebView开发问题及优化汇总</a></h1>
+    <h1 class="title"><a href="/2014/10/13/custom-animation-in-xml/">如何在XML中使用自定义Animation动画类</a></h1>
   
 
     </header>
     <div class="entry">
       
-        <p>我们在native与网页相结合开发的过程中，难免会遇到关于WebView一些共通的问题。就我目前开发过程中遇到的问题以及最后得到的优化方案都将在这里列举出来。有些是老生常谈，有些则是个人摸索得出解决方法。下面就是整理得到的些干货。</p>
-<h3 id="1-加快HTML网页装载完成的速度">1.加快HTML网页装载完成的速度</h3>
-<p>默认情况html代码下载到WebView后，webkit开始解析网页各个节点，发现有外部样式文件或者外部脚本文件时，会异步发起网络请求下载文件，但如果在这之前也有解析到image节点，那势必也会发起网络请求下载相应的图片。在网络情况较差的情况下，过多的网络请求就会造成带宽紧张，影响到css或js文件加载完成的时间，造成页面空白loading过久。解决的方法就是告诉WebView先不要自动加载图片，等页面finish后再发起图片加载。</p>
+        <p>在安卓应用的动画开发中，可能SDK中自带的补间动画不能满足应用的需求，需要在Java代码中自定义一些动画类，当然都是继承自Animation类。实现之后，我们一般直接在代码中使用，类似下面这样：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">CustomAnimation customAnimation = <span class="keyword">new</span> CustomAnimation();</div><div class="line">customAnimation.setDuration(<span class="number">3000</span>);</div><div class="line">customAnimation.setFillAfter(<span class="keyword">true</span>);</div><div class="line">effectView.startAnimation(customAnimation);</div></pre></td></tr></table></figure>
+
+<p>当View同时要应用像Scale，Alpha这样的补间动画时，你就需要多添加像下面这样的代码：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">CustomAnimation customAnimation = <span class="keyword">new</span> CustomAnimation();</div><div class="line">customAnimation.setDuration(<span class="number">3000</span>);</div><div class="line">customAnimation.setFillAfter(<span class="keyword">true</span>);</div><div class="line">Animation scaleAnimation = <span class="keyword">new</span> ScaleAnimation(<span class="number">0</span>f, <span class="number">1</span>f, <span class="number">0</span>f, <span class="number">1</span>f, Animation.RELATIVE_TO_SELF, <span class="number">0.5</span>f, Animation.RELATIVE_TO_SELF, <span class="number">0.5</span>f);</div><div class="line">Animation alphaAnimation = <span class="keyword">new</span> AlphaAnimation(<span class="number">0.1</span>f,<span class="number">1.0</span>f);</div><div class="line">scaleAnimation.setDuration(<span class="number">10000</span>);</div><div class="line">alphaAnimation.setDuration(<span class="number">10000</span>);</div><div class="line">AnimationSet set = <span class="keyword">new</span> AnimationSet(<span class="keyword">true</span>);</div><div class="line">set.addAnimation(customAnimation);</div><div class="line">set.addAnimation(scaleAnimation);</div><div class="line">set.addAnimation(alphaAnimation);</div><div class="line">set.setFillAfter(<span class="keyword">true</span>);</div><div class="line">set.setFillEnabled(<span class="keyword">true</span>);</div><div class="line">effectView.startAnimation(set);</div></pre></td></tr></table></figure>
+
 
       
     </div>
@@ -143,12 +150,12 @@
         
   
   <div class="tags">
-    <a href="/tags/java/">java</a>, <a href="/tags/webview/">webview</a>
+    <a href="/tags/animation/">animation</a>
   </div>
 
         
           <div style="text-align:center;">
-            <a href="/2014/09/10/webview-optimize-points/#more" class="more-link">阅读全文</a>
+            <a href="/2014/10/13/custom-animation-in-xml/#more" class="more-link">阅读全文</a>
           </div>
                 
         
@@ -180,22 +187,22 @@
     <header>
       
         <div class="icon"></div>
-        <time datetime="2014-08-04T12:38:20.000Z"><a href="/2014/08/04/jni-tips-in-chinese/">8月04 2014</a></time>
+        <time datetime="2014-10-13T09:20:26.000Z"><a href="/2014/10/13/custom-animation-in-xml/">10月13 2014</a></time>
       
       
   
-    <h1 class="title"><a href="/2014/08/04/jni-tips-in-chinese/">翻译:JNI Tips in Android Training Course</a></h1>
+    <h1 class="title"><a href="/2014/10/13/custom-animation-in-xml/">如何在XML中使用自定义Animation动画类</a></h1>
   
 
     </header>
     <div class="entry">
       
-        <p>原文链接：<a href="http://developer.android.com/training/articles/perf-jni.html" target="_blank" rel="external">http://developer.android.com/training/articles/perf-jni.html</a></p>
-<p>这篇google官方的培训课程提出了在使用NDK做本地开发时的一些优化建议，如避免FindClass重复查找，内存泄露，常用的数组操作和系统版本中的一些兼容检查问题。对于使用C/C++完成安卓共享库或者ELF程序的开发者，看了这篇文章就会少踩很多坑。如果当中有翻译欠妥的地方，欢迎一起交流沟通^_^！</p>
-<p>全部译文如下。</p>
-<h1 id="JNI_Tips">JNI Tips</h1>
-<p>JNI全称Java Native Interface。它为托管代码（使用Java编程语言编写）与本地代码（使用C/C++编写）提供了一种交互方式。它是<font color="red">与厂商无关的（vendor-neutral）</font>,支持从动态共享库中加载代码，虽然这样会稍显麻烦，但有时这是相当有效的。</p>
-<p>如果你对JNI还不是太熟悉，可以先通读<a href="http://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/jniTOC.html" target="_blank" rel="external">Java Native Interface Specification</a>这篇文章来对JNI如何工作以及哪些特性可用有个大致的印象。这种接口的一些方面不能立即一读就显而易见，所以你会发现接下来的几个章节很有用处。</p>
+        <p>在安卓应用的动画开发中，可能SDK中自带的补间动画不能满足应用的需求，需要在Java代码中自定义一些动画类，当然都是继承自Animation类。实现之后，我们一般直接在代码中使用，类似下面这样：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">CustomAnimation customAnimation = <span class="keyword">new</span> CustomAnimation();</div><div class="line">customAnimation.setDuration(<span class="number">3000</span>);</div><div class="line">customAnimation.setFillAfter(<span class="keyword">true</span>);</div><div class="line">effectView.startAnimation(customAnimation);</div></pre></td></tr></table></figure>
+
+<p>当View同时要应用像Scale，Alpha这样的补间动画时，你就需要多添加像下面这样的代码：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">CustomAnimation customAnimation = <span class="keyword">new</span> CustomAnimation();</div><div class="line">customAnimation.setDuration(<span class="number">3000</span>);</div><div class="line">customAnimation.setFillAfter(<span class="keyword">true</span>);</div><div class="line">Animation scaleAnimation = <span class="keyword">new</span> ScaleAnimation(<span class="number">0</span>f, <span class="number">1</span>f, <span class="number">0</span>f, <span class="number">1</span>f, Animation.RELATIVE_TO_SELF, <span class="number">0.5</span>f, Animation.RELATIVE_TO_SELF, <span class="number">0.5</span>f);</div><div class="line">Animation alphaAnimation = <span class="keyword">new</span> AlphaAnimation(<span class="number">0.1</span>f,<span class="number">1.0</span>f);</div><div class="line">scaleAnimation.setDuration(<span class="number">10000</span>);</div><div class="line">alphaAnimation.setDuration(<span class="number">10000</span>);</div><div class="line">AnimationSet set = <span class="keyword">new</span> AnimationSet(<span class="keyword">true</span>);</div><div class="line">set.addAnimation(customAnimation);</div><div class="line">set.addAnimation(scaleAnimation);</div><div class="line">set.addAnimation(alphaAnimation);</div><div class="line">set.setFillAfter(<span class="keyword">true</span>);</div><div class="line">set.setFillEnabled(<span class="keyword">true</span>);</div><div class="line">effectView.startAnimation(set);</div></pre></td></tr></table></figure>
+
 
       
     </div>
@@ -205,12 +212,12 @@
         
   
   <div class="tags">
-    <a href="/tags/c-c/">c/c++</a>, <a href="/tags/jni/">jni</a>
+    <a href="/tags/animation/">animation</a>
   </div>
 
         
           <div style="text-align:center;">
-            <a href="/2014/08/04/jni-tips-in-chinese/#more" class="more-link">阅读全文</a>
+            <a href="/2014/10/13/custom-animation-in-xml/#more" class="more-link">阅读全文</a>
           </div>
                 
         
@@ -242,24 +249,22 @@
     <header>
       
         <div class="icon"></div>
-        <time datetime="2014-08-01T02:57:29.000Z"><a href="/2014/08/01/sqliteopenhelper-onupgrade-ondowngrade-handle/">8月01 2014</a></time>
+        <time datetime="2014-10-13T09:20:26.000Z"><a href="/2014/10/13/custom-animation-in-xml/">10月13 2014</a></time>
       
       
   
-    <h1 class="title"><a href="/2014/08/01/sqliteopenhelper-onupgrade-ondowngrade-handle/">App版本更新时对SQLite数据库升级或者降级遇到的问题</a></h1>
+    <h1 class="title"><a href="/2014/10/13/custom-animation-in-xml/">如何在XML中使用自定义Animation动画类</a></h1>
   
 
     </header>
     <div class="entry">
       
-        <p>SQLite是Android内置的一个很小的关系型数据库。SQLiteOpenHelper是一个用来辅助管理数据库创建和版本升级问题的抽象类。我们可以继承这个抽象类，实现它的一些方法来对数据库进行自定义操作。下面两个方法必须重写：</p>
-<ul>
-<li>public void onCreate(SQLiteDatabase db)</li>
-<li>public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)</li>
-</ul>
-<p>另外SQLiteOpenHelper子类在构造实例时必须指定当前数据库的名称（name）、版本号（version）。而这里名称就决定了数据库存储时的文件名称，而这里的版本号与App在AndroidMainfest.xml定义的versionCode没有绝对关联。也就是在App更新时如果数据库的数据结构没有发生变化那么数据库的版本号则不用增加。</p>
-<p>onCreate：调用时机是用户首次安装应用后启动，或是清除App数据库文件后启动。这时可以在这个函数中完成初始的数据表的创建。</p>
-<p>onUpgrade：调用时机是用户在做应用更新，覆盖安装后启动，如果新版本中数据库版本号要比旧版本中的数据库版本号高则会调用。这时可以在这个函数完成数据库版本升级带来的旧版本的兼容问题，以及数据迁移问题。</p>
+        <p>在安卓应用的动画开发中，可能SDK中自带的补间动画不能满足应用的需求，需要在Java代码中自定义一些动画类，当然都是继承自Animation类。实现之后，我们一般直接在代码中使用，类似下面这样：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">CustomAnimation customAnimation = <span class="keyword">new</span> CustomAnimation();</div><div class="line">customAnimation.setDuration(<span class="number">3000</span>);</div><div class="line">customAnimation.setFillAfter(<span class="keyword">true</span>);</div><div class="line">effectView.startAnimation(customAnimation);</div></pre></td></tr></table></figure>
+
+<p>当View同时要应用像Scale，Alpha这样的补间动画时，你就需要多添加像下面这样的代码：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">CustomAnimation customAnimation = <span class="keyword">new</span> CustomAnimation();</div><div class="line">customAnimation.setDuration(<span class="number">3000</span>);</div><div class="line">customAnimation.setFillAfter(<span class="keyword">true</span>);</div><div class="line">Animation scaleAnimation = <span class="keyword">new</span> ScaleAnimation(<span class="number">0</span>f, <span class="number">1</span>f, <span class="number">0</span>f, <span class="number">1</span>f, Animation.RELATIVE_TO_SELF, <span class="number">0.5</span>f, Animation.RELATIVE_TO_SELF, <span class="number">0.5</span>f);</div><div class="line">Animation alphaAnimation = <span class="keyword">new</span> AlphaAnimation(<span class="number">0.1</span>f,<span class="number">1.0</span>f);</div><div class="line">scaleAnimation.setDuration(<span class="number">10000</span>);</div><div class="line">alphaAnimation.setDuration(<span class="number">10000</span>);</div><div class="line">AnimationSet set = <span class="keyword">new</span> AnimationSet(<span class="keyword">true</span>);</div><div class="line">set.addAnimation(customAnimation);</div><div class="line">set.addAnimation(scaleAnimation);</div><div class="line">set.addAnimation(alphaAnimation);</div><div class="line">set.setFillAfter(<span class="keyword">true</span>);</div><div class="line">set.setFillEnabled(<span class="keyword">true</span>);</div><div class="line">effectView.startAnimation(set);</div></pre></td></tr></table></figure>
+
 
       
     </div>
@@ -269,12 +274,12 @@
         
   
   <div class="tags">
-    <a href="/tags/sqlite/">sqlite</a>, <a href="/tags/java/">java</a>
+    <a href="/tags/animation/">animation</a>
   </div>
 
         
           <div style="text-align:center;">
-            <a href="/2014/08/01/sqliteopenhelper-onupgrade-ondowngrade-handle/#more" class="more-link">阅读全文</a>
+            <a href="/2014/10/13/custom-animation-in-xml/#more" class="more-link">阅读全文</a>
           </div>
                 
         
@@ -306,20 +311,22 @@
     <header>
       
         <div class="icon"></div>
-        <time datetime="2014-07-22T06:01:36.000Z"><a href="/2014/07/22/crack-a-draw-app/">7月22 2014</a></time>
+        <time datetime="2014-10-13T09:20:26.000Z"><a href="/2014/10/13/custom-animation-in-xml/">10月13 2014</a></time>
       
       
   
-    <h1 class="title"><a href="/2014/07/22/crack-a-draw-app/">一个抽奖应用的逆向破解全流程</a></h1>
+    <h1 class="title"><a href="/2014/10/13/custom-animation-in-xml/">如何在XML中使用自定义Animation动画类</a></h1>
   
 
     </header>
     <div class="entry">
       
-        <h3 id="东窗事发"><strong>东窗事发</strong></h3>
-<p>偶然见到一个应用内有抽奖的活动（应用具体名称就不便告知），而且是每天都可以抽。同时抽奖之前也不需要用户登录什么的，但限定了用户一天（自然天）只能抽奖一次。那么应用的服务端在用户没有登录的情况下是依据什么来判定当前用户今天是否已抽过奖了呢？这当中判断的依据是否可靠，能否被伪造然后实现一天多次抽奖呢？带着这些问题，让我们来剥开应用的层层外纱。</p>
-<h3 id="初识庐山"><strong>初识庐山</strong></h3>
-<p>首先在PC端打开LogCat，然后手机连接PC，最后手机上打开该应用的抽奖界面。这时我们在LogCat中发现了该应用输出的如下日志：</p>
+        <p>在安卓应用的动画开发中，可能SDK中自带的补间动画不能满足应用的需求，需要在Java代码中自定义一些动画类，当然都是继承自Animation类。实现之后，我们一般直接在代码中使用，类似下面这样：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">CustomAnimation customAnimation = <span class="keyword">new</span> CustomAnimation();</div><div class="line">customAnimation.setDuration(<span class="number">3000</span>);</div><div class="line">customAnimation.setFillAfter(<span class="keyword">true</span>);</div><div class="line">effectView.startAnimation(customAnimation);</div></pre></td></tr></table></figure>
+
+<p>当View同时要应用像Scale，Alpha这样的补间动画时，你就需要多添加像下面这样的代码：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">CustomAnimation customAnimation = <span class="keyword">new</span> CustomAnimation();</div><div class="line">customAnimation.setDuration(<span class="number">3000</span>);</div><div class="line">customAnimation.setFillAfter(<span class="keyword">true</span>);</div><div class="line">Animation scaleAnimation = <span class="keyword">new</span> ScaleAnimation(<span class="number">0</span>f, <span class="number">1</span>f, <span class="number">0</span>f, <span class="number">1</span>f, Animation.RELATIVE_TO_SELF, <span class="number">0.5</span>f, Animation.RELATIVE_TO_SELF, <span class="number">0.5</span>f);</div><div class="line">Animation alphaAnimation = <span class="keyword">new</span> AlphaAnimation(<span class="number">0.1</span>f,<span class="number">1.0</span>f);</div><div class="line">scaleAnimation.setDuration(<span class="number">10000</span>);</div><div class="line">alphaAnimation.setDuration(<span class="number">10000</span>);</div><div class="line">AnimationSet set = <span class="keyword">new</span> AnimationSet(<span class="keyword">true</span>);</div><div class="line">set.addAnimation(customAnimation);</div><div class="line">set.addAnimation(scaleAnimation);</div><div class="line">set.addAnimation(alphaAnimation);</div><div class="line">set.setFillAfter(<span class="keyword">true</span>);</div><div class="line">set.setFillEnabled(<span class="keyword">true</span>);</div><div class="line">effectView.startAnimation(set);</div></pre></td></tr></table></figure>
+
 
       
     </div>
@@ -329,12 +336,12 @@
         
   
   <div class="tags">
-    <a href="/tags/java/">java</a>, <a href="/tags/攻防安全/">攻防安全</a>
+    <a href="/tags/animation/">animation</a>
   </div>
 
         
           <div style="text-align:center;">
-            <a href="/2014/07/22/crack-a-draw-app/#more" class="more-link">阅读全文</a>
+            <a href="/2014/10/13/custom-animation-in-xml/#more" class="more-link">阅读全文</a>
           </div>
                 
         
@@ -366,17 +373,22 @@
     <header>
       
         <div class="icon"></div>
-        <time datetime="2014-07-04T06:53:54.000Z"><a href="/2014/07/04/webview-js-java-interface-research/">7月04 2014</a></time>
+        <time datetime="2014-10-13T09:20:26.000Z"><a href="/2014/10/13/custom-animation-in-xml/">10月13 2014</a></time>
       
       
   
-    <h1 class="title"><a href="/2014/07/04/webview-js-java-interface-research/">在WebView中如何让JS与Java安全地互相调用</a></h1>
+    <h1 class="title"><a href="/2014/10/13/custom-animation-in-xml/">如何在XML中使用自定义Animation动画类</a></h1>
   
 
     </header>
     <div class="entry">
       
-        <p>在现在安卓应用原生开发中，为了追求开发的效率以及移植的便利性，使用WebView作为业务内容展示与交互的主要载体是个不错的折中方案。那么在这种Hybrid(混合式) App中，难免就会遇到页面JS需要与Java相互调用，调用Java方法去做那部分网页JS不能完成的功能。</p>
+        <p>在安卓应用的动画开发中，可能SDK中自带的补间动画不能满足应用的需求，需要在Java代码中自定义一些动画类，当然都是继承自Animation类。实现之后，我们一般直接在代码中使用，类似下面这样：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">CustomAnimation customAnimation = <span class="keyword">new</span> CustomAnimation();</div><div class="line">customAnimation.setDuration(<span class="number">3000</span>);</div><div class="line">customAnimation.setFillAfter(<span class="keyword">true</span>);</div><div class="line">effectView.startAnimation(customAnimation);</div></pre></td></tr></table></figure>
+
+<p>当View同时要应用像Scale，Alpha这样的补间动画时，你就需要多添加像下面这样的代码：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">CustomAnimation customAnimation = <span class="keyword">new</span> CustomAnimation();</div><div class="line">customAnimation.setDuration(<span class="number">3000</span>);</div><div class="line">customAnimation.setFillAfter(<span class="keyword">true</span>);</div><div class="line">Animation scaleAnimation = <span class="keyword">new</span> ScaleAnimation(<span class="number">0</span>f, <span class="number">1</span>f, <span class="number">0</span>f, <span class="number">1</span>f, Animation.RELATIVE_TO_SELF, <span class="number">0.5</span>f, Animation.RELATIVE_TO_SELF, <span class="number">0.5</span>f);</div><div class="line">Animation alphaAnimation = <span class="keyword">new</span> AlphaAnimation(<span class="number">0.1</span>f,<span class="number">1.0</span>f);</div><div class="line">scaleAnimation.setDuration(<span class="number">10000</span>);</div><div class="line">alphaAnimation.setDuration(<span class="number">10000</span>);</div><div class="line">AnimationSet set = <span class="keyword">new</span> AnimationSet(<span class="keyword">true</span>);</div><div class="line">set.addAnimation(customAnimation);</div><div class="line">set.addAnimation(scaleAnimation);</div><div class="line">set.addAnimation(alphaAnimation);</div><div class="line">set.setFillAfter(<span class="keyword">true</span>);</div><div class="line">set.setFillEnabled(<span class="keyword">true</span>);</div><div class="line">effectView.startAnimation(set);</div></pre></td></tr></table></figure>
+
 
       
     </div>
@@ -386,12 +398,12 @@
         
   
   <div class="tags">
-    <a href="/tags/webview/">webview</a>, <a href="/tags/javascript/">javascript</a>, <a href="/tags/java/">java</a>, <a href="/tags/攻防安全/">攻防安全</a>
+    <a href="/tags/animation/">animation</a>
   </div>
 
         
           <div style="text-align:center;">
-            <a href="/2014/07/04/webview-js-java-interface-research/#more" class="more-link">阅读全文</a>
+            <a href="/2014/10/13/custom-animation-in-xml/#more" class="more-link">阅读全文</a>
           </div>
                 
         
@@ -423,18 +435,22 @@
     <header>
       
         <div class="icon"></div>
-        <time datetime="2014-06-18T03:15:29.000Z"><a href="/2014/06/18/imagemagick-ported-android/">6月18 2014</a></time>
+        <time datetime="2014-10-13T09:20:26.000Z"><a href="/2014/10/13/custom-animation-in-xml/">10月13 2014</a></time>
       
       
   
-    <h1 class="title"><a href="/2014/06/18/imagemagick-ported-android/">Windows下将ImageMagick移植到Android平台</a></h1>
+    <h1 class="title"><a href="/2014/10/13/custom-animation-in-xml/">如何在XML中使用自定义Animation动画类</a></h1>
   
 
     </header>
     <div class="entry">
       
-        <p>ImageMagick是一个用来创建、编辑、合成图片的软件。它可以读取、转换、写入多种格式的图片。在移动平台做一些较复杂的图像处理时，难免会请出这尊大神。<a href="http://www.imagemagick.org/index.php" target="_blank" rel="external">官方网站上</a>也说明了它可以运行在多个平台之上，包括Android。不过官方的Releases版本只有Unix、Mac OS X、IOS、Windows，并有把针对Android各种架构发布现成的二进制包。不过好在它完全是开源的，我们完全可以下载源码然后自己交叉编译(Cross-Compile)出基于arm、x86、mips运行系统的静态链接库，这样就可以在目前的Android全平台下跑起来了。</p>
-<p>一般我们办公都在Windows平台，可是要用源码交叉编译(Source Cross-Compile)就得使用GNU环境，如果单独装一个linux虚拟机再来编译过程太过麻烦。我们可以在windows上使用MinGW工具来模拟一套GNU环境。</p>
+        <p>在安卓应用的动画开发中，可能SDK中自带的补间动画不能满足应用的需求，需要在Java代码中自定义一些动画类，当然都是继承自Animation类。实现之后，我们一般直接在代码中使用，类似下面这样：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">CustomAnimation customAnimation = <span class="keyword">new</span> CustomAnimation();</div><div class="line">customAnimation.setDuration(<span class="number">3000</span>);</div><div class="line">customAnimation.setFillAfter(<span class="keyword">true</span>);</div><div class="line">effectView.startAnimation(customAnimation);</div></pre></td></tr></table></figure>
+
+<p>当View同时要应用像Scale，Alpha这样的补间动画时，你就需要多添加像下面这样的代码：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">CustomAnimation customAnimation = <span class="keyword">new</span> CustomAnimation();</div><div class="line">customAnimation.setDuration(<span class="number">3000</span>);</div><div class="line">customAnimation.setFillAfter(<span class="keyword">true</span>);</div><div class="line">Animation scaleAnimation = <span class="keyword">new</span> ScaleAnimation(<span class="number">0</span>f, <span class="number">1</span>f, <span class="number">0</span>f, <span class="number">1</span>f, Animation.RELATIVE_TO_SELF, <span class="number">0.5</span>f, Animation.RELATIVE_TO_SELF, <span class="number">0.5</span>f);</div><div class="line">Animation alphaAnimation = <span class="keyword">new</span> AlphaAnimation(<span class="number">0.1</span>f,<span class="number">1.0</span>f);</div><div class="line">scaleAnimation.setDuration(<span class="number">10000</span>);</div><div class="line">alphaAnimation.setDuration(<span class="number">10000</span>);</div><div class="line">AnimationSet set = <span class="keyword">new</span> AnimationSet(<span class="keyword">true</span>);</div><div class="line">set.addAnimation(customAnimation);</div><div class="line">set.addAnimation(scaleAnimation);</div><div class="line">set.addAnimation(alphaAnimation);</div><div class="line">set.setFillAfter(<span class="keyword">true</span>);</div><div class="line">set.setFillEnabled(<span class="keyword">true</span>);</div><div class="line">effectView.startAnimation(set);</div></pre></td></tr></table></figure>
+
 
       
     </div>
@@ -444,12 +460,198 @@
         
   
   <div class="tags">
-    <a href="/tags/c-c/">c/c++</a>, <a href="/tags/jni/">jni</a>, <a href="/tags/库移植/">库移植</a>
+    <a href="/tags/animation/">animation</a>
   </div>
 
         
           <div style="text-align:center;">
-            <a href="/2014/06/18/imagemagick-ported-android/#more" class="more-link">阅读全文</a>
+            <a href="/2014/10/13/custom-animation-in-xml/#more" class="more-link">阅读全文</a>
+          </div>
+                
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  
+  </div>
+</article>
+
+
+
+
+  <article class="android">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2014-10-13T09:20:26.000Z"><a href="/2014/10/13/custom-animation-in-xml/">10月13 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/13/custom-animation-in-xml/">如何在XML中使用自定义Animation动画类</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在安卓应用的动画开发中，可能SDK中自带的补间动画不能满足应用的需求，需要在Java代码中自定义一些动画类，当然都是继承自Animation类。实现之后，我们一般直接在代码中使用，类似下面这样：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">CustomAnimation customAnimation = <span class="keyword">new</span> CustomAnimation();</div><div class="line">customAnimation.setDuration(<span class="number">3000</span>);</div><div class="line">customAnimation.setFillAfter(<span class="keyword">true</span>);</div><div class="line">effectView.startAnimation(customAnimation);</div></pre></td></tr></table></figure>
+
+<p>当View同时要应用像Scale，Alpha这样的补间动画时，你就需要多添加像下面这样的代码：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">CustomAnimation customAnimation = <span class="keyword">new</span> CustomAnimation();</div><div class="line">customAnimation.setDuration(<span class="number">3000</span>);</div><div class="line">customAnimation.setFillAfter(<span class="keyword">true</span>);</div><div class="line">Animation scaleAnimation = <span class="keyword">new</span> ScaleAnimation(<span class="number">0</span>f, <span class="number">1</span>f, <span class="number">0</span>f, <span class="number">1</span>f, Animation.RELATIVE_TO_SELF, <span class="number">0.5</span>f, Animation.RELATIVE_TO_SELF, <span class="number">0.5</span>f);</div><div class="line">Animation alphaAnimation = <span class="keyword">new</span> AlphaAnimation(<span class="number">0.1</span>f,<span class="number">1.0</span>f);</div><div class="line">scaleAnimation.setDuration(<span class="number">10000</span>);</div><div class="line">alphaAnimation.setDuration(<span class="number">10000</span>);</div><div class="line">AnimationSet set = <span class="keyword">new</span> AnimationSet(<span class="keyword">true</span>);</div><div class="line">set.addAnimation(customAnimation);</div><div class="line">set.addAnimation(scaleAnimation);</div><div class="line">set.addAnimation(alphaAnimation);</div><div class="line">set.setFillAfter(<span class="keyword">true</span>);</div><div class="line">set.setFillEnabled(<span class="keyword">true</span>);</div><div class="line">effectView.startAnimation(set);</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+  
+    <footer>
+            
+        
+  
+  <div class="tags">
+    <a href="/tags/animation/">animation</a>
+  </div>
+
+        
+          <div style="text-align:center;">
+            <a href="/2014/10/13/custom-animation-in-xml/#more" class="more-link">阅读全文</a>
+          </div>
+                
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  
+  </div>
+</article>
+
+
+
+
+  <article class="android">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2014-10-13T09:20:26.000Z"><a href="/2014/10/13/custom-animation-in-xml/">10月13 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/13/custom-animation-in-xml/">如何在XML中使用自定义Animation动画类</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在安卓应用的动画开发中，可能SDK中自带的补间动画不能满足应用的需求，需要在Java代码中自定义一些动画类，当然都是继承自Animation类。实现之后，我们一般直接在代码中使用，类似下面这样：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">CustomAnimation customAnimation = <span class="keyword">new</span> CustomAnimation();</div><div class="line">customAnimation.setDuration(<span class="number">3000</span>);</div><div class="line">customAnimation.setFillAfter(<span class="keyword">true</span>);</div><div class="line">effectView.startAnimation(customAnimation);</div></pre></td></tr></table></figure>
+
+<p>当View同时要应用像Scale，Alpha这样的补间动画时，你就需要多添加像下面这样的代码：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">CustomAnimation customAnimation = <span class="keyword">new</span> CustomAnimation();</div><div class="line">customAnimation.setDuration(<span class="number">3000</span>);</div><div class="line">customAnimation.setFillAfter(<span class="keyword">true</span>);</div><div class="line">Animation scaleAnimation = <span class="keyword">new</span> ScaleAnimation(<span class="number">0</span>f, <span class="number">1</span>f, <span class="number">0</span>f, <span class="number">1</span>f, Animation.RELATIVE_TO_SELF, <span class="number">0.5</span>f, Animation.RELATIVE_TO_SELF, <span class="number">0.5</span>f);</div><div class="line">Animation alphaAnimation = <span class="keyword">new</span> AlphaAnimation(<span class="number">0.1</span>f,<span class="number">1.0</span>f);</div><div class="line">scaleAnimation.setDuration(<span class="number">10000</span>);</div><div class="line">alphaAnimation.setDuration(<span class="number">10000</span>);</div><div class="line">AnimationSet set = <span class="keyword">new</span> AnimationSet(<span class="keyword">true</span>);</div><div class="line">set.addAnimation(customAnimation);</div><div class="line">set.addAnimation(scaleAnimation);</div><div class="line">set.addAnimation(alphaAnimation);</div><div class="line">set.setFillAfter(<span class="keyword">true</span>);</div><div class="line">set.setFillEnabled(<span class="keyword">true</span>);</div><div class="line">effectView.startAnimation(set);</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+  
+    <footer>
+            
+        
+  
+  <div class="tags">
+    <a href="/tags/animation/">animation</a>
+  </div>
+
+        
+          <div style="text-align:center;">
+            <a href="/2014/10/13/custom-animation-in-xml/#more" class="more-link">阅读全文</a>
+          </div>
+                
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  
+  </div>
+</article>
+
+
+
+
+  <article class="android">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2014-10-13T09:20:26.000Z"><a href="/2014/10/13/custom-animation-in-xml/">10月13 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/13/custom-animation-in-xml/">如何在XML中使用自定义Animation动画类</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在安卓应用的动画开发中，可能SDK中自带的补间动画不能满足应用的需求，需要在Java代码中自定义一些动画类，当然都是继承自Animation类。实现之后，我们一般直接在代码中使用，类似下面这样：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">CustomAnimation customAnimation = <span class="keyword">new</span> CustomAnimation();</div><div class="line">customAnimation.setDuration(<span class="number">3000</span>);</div><div class="line">customAnimation.setFillAfter(<span class="keyword">true</span>);</div><div class="line">effectView.startAnimation(customAnimation);</div></pre></td></tr></table></figure>
+
+<p>当View同时要应用像Scale，Alpha这样的补间动画时，你就需要多添加类似下面的代码：</p>
+<figure class="highlight JAVA"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">CustomAnimation customAnimation = <span class="keyword">new</span> CustomAnimation();</div><div class="line">customAnimation.setDuration(<span class="number">3000</span>);</div><div class="line">customAnimation.setFillAfter(<span class="keyword">true</span>);</div><div class="line">Animation scaleAnimation = <span class="keyword">new</span> ScaleAnimation(<span class="number">0</span>f, <span class="number">1</span>f, <span class="number">0</span>f, <span class="number">1</span>f, Animation.RELATIVE_TO_SELF, <span class="number">0.5</span>f, Animation.RELATIVE_TO_SELF, <span class="number">0.5</span>f);</div><div class="line">Animation alphaAnimation = <span class="keyword">new</span> AlphaAnimation(<span class="number">0.1</span>f,<span class="number">1.0</span>f);</div><div class="line">scaleAnimation.setDuration(<span class="number">10000</span>);</div><div class="line">alphaAnimation.setDuration(<span class="number">10000</span>);</div><div class="line">AnimationSet set = <span class="keyword">new</span> AnimationSet(<span class="keyword">true</span>);</div><div class="line">set.addAnimation(customAnimation);</div><div class="line">set.addAnimation(scaleAnimation);</div><div class="line">set.addAnimation(alphaAnimation);</div><div class="line">set.setFillAfter(<span class="keyword">true</span>);</div><div class="line">set.setFillEnabled(<span class="keyword">true</span>);</div><div class="line">effectView.startAnimation(set);</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+  
+    <footer>
+            
+        
+  
+  <div class="tags">
+    <a href="/tags/animation/">animation</a>
+  </div>
+
+        
+          <div style="text-align:center;">
+            <a href="/2014/10/13/custom-animation-in-xml/#more" class="more-link">阅读全文</a>
           </div>
                 
         
@@ -467,6 +669,8 @@
 <nav id="pagination">
   
   
+    <a href="/page/2/" class="alignright next">下一页</a>
+  
   <div class="clearfix"></div>
 </nav></div></div>
     <aside id="sidebar" class="alignright">
@@ -482,7 +686,7 @@
   <h3 class="title">分类</h3>
   <ul class="entry">
   
-    <li><a href="/categories/android/">android</a><small>7</small></li>
+    <li><a href="/categories/android/">android</a><small>17</small></li>
   
   </ul>
 </div>
@@ -492,6 +696,8 @@
 <div class="widget tag">
   <h3 class="title">标签</h3>
   <ul class="entry">
+  
+    <li><a href="/tags/animation/">animation</a><small>10</small></li>
   
     <li><a href="/tags/c-c/">c/c++</a><small>2</small></li>
   
